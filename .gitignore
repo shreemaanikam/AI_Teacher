@@ -1,0 +1,13 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Source assessment files are kept locally, not in Git.
+*.txt
+*.pdf
+/technical_assessment_document.md
