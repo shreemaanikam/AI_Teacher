@@ -4,9 +4,11 @@ Generates an interactive, responsive animated teacher avatar with lip-sync, gest
 """
 
 from __future__ import annotations
-from typing import Dict, List, Optional
 from app.media.models import AvatarAsset, TeachingScript, AudioAsset
-from app.media.avatar.provider import AvatarProvider
+try:
+    from app.media.avatar.base import AvatarProvider
+except ImportError:
+    from app.media.avatar.provider import AvatarProvider
 
 
 class ProceduralAvatarProvider(AvatarProvider):
@@ -15,6 +17,9 @@ class ProceduralAvatarProvider(AvatarProvider):
     Features natural talking mouth cycles, eye blinks, blackboard pointer gestures,
     and adaptive posture based on teaching strategy.
     """
+
+    def get_supported_styles(self) -> List[str]:
+        return ["academic_mentor", "socratic_guide"]
 
     def get_available_presenters(self) -> List[Dict[str, str]]:
         return [
@@ -27,6 +32,7 @@ class ProceduralAvatarProvider(AvatarProvider):
         script: TeachingScript,
         audio: Optional[AudioAsset] = None,
         presenter_style: str = "academic_mentor",
+        visual_context: Optional[str] = None,
     ) -> AvatarAsset:
         duration = audio.duration_seconds if audio else script.estimated_duration_seconds
 

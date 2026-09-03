@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Teacher — Adaptive Cognitive Teaching Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes blink { 0%, 90%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+    @keyframes talk { 0%, 100% { transform: scaleY(0.8); } 50% { transform: scaleY(1.3); } }
+    .animate-blink { animation: blink 3.5s infinite; transform-origin: center; }
+    .animate-talk { animation: talk 0.3s infinite ease-in-out; transform-origin: center; }
+    .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center font-bold text-xl shadow-lg shadow-sky-500/20">
+          AI
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-wide">Apurva AI Teacher</h1>
+          <p class="text-xs text-sky-400 font-medium">Closed-Loop Adaptive Cognitive Teaching Engine</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          State Machine: ACTIVE
+        </span>
+        <button id="quickRunBtn" onclick="runLiveOhmsLawDemo()" class="px-4 py-2 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white rounded-lg text-sm font-semibold shadow-lg shadow-sky-500/25 transition-all flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Run Ohm's Law Adaptive Flow
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs (6 Screens) -->
+  <div class="border-b border-slate-800 bg-slate-900/40">
+    <div class="max-w-7xl mx-auto px-4 flex space-x-1 overflow-x-auto py-2">
+      <button onclick="switchTab(1)" id="tab-1" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-sky-400 bg-slate-800">1. Session Setup</button>
+      <button onclick="switchTab(2)" id="tab-2" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white">2. Lesson Plan</button>
+      <button onclick="switchTab(3)" id="tab-3" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white">3. Teaching Stage</button>
+      <button onclick="switchTab(4)" id="tab-4" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white">4. Checkpoint Question</button>
+      <button onclick="switchTab(5)" id="tab-5" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white">5. Adaptive Remediation</button>
+      <button onclick="switchTab(6)" id="tab-6" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white">6. Learning Report</button>
+    </div>
+  </div>
+
+  <!-- Main Content Stage -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full">
+
+    <!-- SCREEN 1: Session Setup -->
+    <div id="screen-1" class="screen-panel block">
+      <div class="max-w-3xl mx-auto bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
+        <div>
+          <h2 class="text-xl font-bold text-white">Create Learning Session</h2>
+          <p class="text-sm text-slate-400 mt-1">Configure learner profile, topic, pedagogical depth, and language.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Subject</label>
+            <select id="setupSubject" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:ring-2 focus:ring-sky-500">
+              <option value="physics" selected>Physics</option>
+              <option value="mathematics">Mathematics</option>
+              <option value="programming">Programming</option>
+              <option value="biology">Biology</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Topic or Concept</label>
+            <input type="text" id="setupTopic" value="Ohm's Law" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:ring-2 focus:ring-sky-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Learner Level</label>
+            <select id="setupLevel" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:ring-2 focus:ring-sky-500">
+              <option value="beginner" selected>Beginner (Foundation)</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Language</label>
+            <select id="setupLang" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:ring-2 focus:ring-sky-500">
+              <option value="en" selected>English</option>
+              <option value="hi">Hindi (हिंदी)</option>
+              <option value="ta">Tamil (தமிழ்)</option>
+              <option value="hinglish">Hinglish</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+          <div class="text-xs text-slate-500">Time Budget: 10 mins • Multi-tier offline fallback active</div>
+          <button onclick="runLiveOhmsLawDemo()" class="px-6 py-2.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded-lg text-sm transition">
+            Start Teaching Session
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: AI Lesson Plan -->
+    <div id="screen-2" class="screen-panel hidden">
+      <div class="max-w-4xl mx-auto space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="p-2 bg-sky-500/10 text-sky-400 rounded-lg">📋</span>
+            Dynamic Pedagogical Lesson Plan
+          </h2>
+          <p class="text-sm text-slate-400 mt-1">Structured by the Teaching Harness and Learner Cognitive Model.</p>
+
+          <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl">
+              <span class="text-xs text-slate-400 font-semibold uppercase">Target Concept 1</span>
+              <p class="font-bold text-white mt-1 text-base">Ohm's Law Fundamentals</p>
+              <p class="text-xs text-slate-400 mt-1">Direct explanation + DC Circuit Diagram</p>
+            </div>
+            <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl">
+              <span class="text-xs text-slate-400 font-semibold uppercase">Target Concept 2</span>
+              <p class="font-bold text-white mt-1 text-base">V - I - R Relationship</p>
+              <p class="text-xs text-slate-400 mt-1">Hydraulic Analogy + Mathematical $I = V / R$</p>
+            </div>
+            <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl">
+              <span class="text-xs text-slate-400 font-semibold uppercase">Assessment Strategy</span>
+              <p class="font-bold text-white mt-1 text-base">Adaptive Checkpoints</p>
+              <p class="text-xs text-slate-400 mt-1">Misconception diagnosis with auto-remediation</p>
+            </div>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-slate-800 flex justify-end">
+            <button onclick="switchTab(3)" class="px-5 py-2 bg-sky-500 text-slate-950 font-bold rounded-lg text-sm">Proceed to Teaching Stage →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: Multimodal Teaching Stage -->
+    <div id="screen-3" class="screen-panel hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: SVG Whiteboard -->
+        <div class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col min-h-[460px]">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+              <span id="whiteboardTitle" class="text-xs font-semibold text-slate-300 ml-2">Interactive Visual Whiteboard</span>
+            </div>
+            <span id="visualBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">SVG VECTOR RENDERER</span>
+          </div>
+          
+          <div id="whiteboardContent" class="flex-1 flex items-center justify-center p-2 rounded-xl mt-3 bg-slate-950/80 border border-slate-800/80 overflow-hidden">
+            <div class="text-slate-500 text-sm">Click "Run Ohm's Law Adaptive Flow" to load live visual...</div>
+          </div>
+        </div>
+
+        <!-- Right: Animated Avatar & Live Audio -->
+        <div class="lg:col-span-4 flex flex-col space-y-4">
+          <!-- Presenter Avatar Card -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center">
+            <div class="flex items-center justify-between w-full pb-2 border-b border-slate-800 mb-3">
+              <span class="text-xs font-bold text-white">Teacher Presenter</span>
+              <span class="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Synced Audio</span>
+            </div>
+            <div id="avatarContainer" class="w-48 h-48 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center overflow-hidden">
+              <div class="text-slate-600 text-xs">Avatar Idle</div>
+            </div>
+            <div class="w-full mt-3">
+              <audio id="audioPlayer" controls class="w-full h-8 rounded mt-1 bg-slate-800"></audio>
+            </div>
+          </div>
+
+          <!-- Captions Card -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex-1 flex flex-col">
+            <span class="text-xs font-bold text-slate-300 mb-2 flex items-center gap-1">
+              <span>💬</span> Synchronized Captions
+            </span>
+            <div id="captionsBox" class="flex-1 bg-slate-950 rounded-xl p-3 text-sm text-slate-200 border border-slate-800 font-medium leading-relaxed">
+              Waiting for teacher speech...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: Checkpoint Question Interaction -->
+    <div id="screen-4" class="screen-panel hidden">
+      <div class="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div>
+            <span class="text-xs font-bold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full border border-amber-400/20">CHECKPOINT QUESTION</span>
+            <h2 id="qPrompt" class="text-lg font-bold text-white mt-2">Loading question...</h2>
+          </div>
+        </div>
+
+        <div id="qOptions" class="space-y-3">
+          <!-- Dynamic options -->
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold text-slate-400">Or type your conceptual reasoning in your own words:</label>
+          <textarea id="studentFreeAnswer" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-sky-500" placeholder="e.g. If resistance increases, current will..."></textarea>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+          <button onclick="submitDemoMisconception()" class="px-5 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-lg text-sm font-semibold transition">
+            ⚡ Submit Misconception Answer (Test Adaptation)
+          </button>
+          <button onclick="submitDemoCorrectAnswer()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-lg text-sm font-bold transition">
+            Submit Correct Answer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: Adaptive Remediation Flow -->
+    <div id="screen-5" class="screen-panel hidden">
+      <div class="max-w-4xl mx-auto space-y-6">
+        
+        <!-- Misconception Alert Banner -->
+        <div class="bg-rose-950/40 border border-rose-500/40 rounded-2xl p-5 shadow-xl">
+          <div class="flex items-start space-x-3">
+            <span class="text-2xl">🚨</span>
+            <div class="flex-1">
+              <h3 class="text-base font-bold text-rose-300">Cognitive Misconception Diagnosed</h3>
+              <p id="miscType" class="text-sm text-rose-200 mt-1 font-semibold">inverse_relationship_confusion</p>
+              <p id="miscBelief" class="text-xs text-rose-300/80 mt-1">Student believes increasing resistance increases electrical current.</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-mono px-2 py-1 bg-rose-500/20 text-rose-300 rounded border border-rose-500/30">Confidence: 92%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Strategy Shift Indicator -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+            <span class="text-xs text-slate-400 font-semibold uppercase">Previous Strategy (Failed)</span>
+            <p class="font-bold text-slate-300 mt-1">DIRECT_EXPLANATION (Circuit Diagram)</p>
+          </div>
+          <div class="p-4 bg-sky-950/40 border border-sky-500/30 rounded-xl">
+            <span class="text-xs text-sky-400 font-semibold uppercase">New Adapted Strategy</span>
+            <p class="font-bold text-sky-300 mt-1">SIMPLE_ANALOGY (Water Pipe Constriction)</p>
+          </div>
+        </div>
+
+        <!-- Remediated Visual Whiteboard -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+            <span class="text-xs font-bold text-sky-400">Remediated Visual: Side-by-Side Water Pipe vs Electric Circuit</span>
+            <span class="text-xs font-mono text-slate-400">ANALOGY_WATER_CIRCUIT (SVG)</span>
+          </div>
+          <div id="remediatedWhiteboard" class="bg-slate-950 rounded-xl p-2 flex items-center justify-center border border-slate-800 min-h-[300px]">
+            <!-- Injected Water SVG -->
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <button onclick="switchTab(6)" class="px-6 py-2.5 bg-sky-500 text-slate-950 font-bold rounded-lg text-sm">Proceed to Learning Report →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 6: Comprehensive Learning Report & AI Teaching Trace -->
+    <div id="screen-6" class="screen-panel hidden">
+      <div class="max-w-4xl mx-auto space-y-6">
+        
+        <!-- Score & Mastery Summary -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="text-center md:border-r border-slate-800 pr-4">
+            <span class="text-xs font-bold text-slate-400 uppercase">Final Lesson Score</span>
+            <div id="finalScore" class="text-4xl font-extrabold text-emerald-400 mt-2">95%</div>
+            <span class="text-xs text-emerald-300/80 mt-1 block">Mastery Confirmed</span>
+          </div>
+          <div class="col-span-2 space-y-3">
+            <span class="text-xs font-bold text-slate-400 uppercase">Concept Mastery Progression</span>
+            <div>
+              <div class="flex justify-between text-xs font-medium text-slate-300 mb-1">
+                <span>Ohm's Law Core (I = V / R)</span>
+                <span id="masteryVal" class="text-sky-400 font-bold">100%</span>
+              </div>
+              <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                <div id="masteryBar" class="bg-gradient-to-r from-sky-500 to-emerald-500 h-full w-[100%] transition-all duration-1000"></div>
+              </div>
+            </div>
+            <div class="pt-2 flex flex-wrap gap-2">
+              <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-md border border-emerald-500/20">✓ Misconception Resolved: Inverse Relationship</span>
+              <span class="px-2.5 py-1 bg-sky-500/10 text-sky-400 text-xs rounded-md border border-sky-500/20">✓ Voltage / Current Direct Proportion</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Teaching Trace Observability Log -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span>🔍</span> AI Teaching Trace (Judge Observability Audit)
+          </h3>
+          <pre id="traceBox" class="bg-slate-950 border border-slate-800 text-sky-300 font-mono text-xs p-4 rounded-xl overflow-x-auto whitespace-pre leading-tight max-h-72">
+Loading teaching trace...
+          </pre>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Script for UI Tab Control & API Integration -->
+  <script>
+    let demoData = null;
+
+    function switchTab(num) {
+      document.querySelectorAll('.screen-panel').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('text-sky-400', 'bg-slate-800');
+        btn.classList.add('text-slate-400');
+      });
+
+      const activeScreen = document.getElementById(`screen-${num}`);
+      const activeTab = document.getElementById(`tab-${num}`);
+      if (activeScreen) activeScreen.classList.remove('hidden');
+      if (activeTab) {
+        activeTab.classList.add('text-sky-400', 'bg-slate-800');
+        activeTab.classList.remove('text-slate-400');
+      }
+    }
+
+    async function runLiveOhmsLawDemo() {
+      const btn = document.getElementById('quickRunBtn');
+      btn.innerText = "Executing Loop...";
+      btn.classList.add('opacity-75', 'cursor-not-allowed');
+
+      try {
+        const lang = document.getElementById('setupLang').value || 'en';
+        const res = await fetch('/api/v1/demo/run-ohms-law', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: lang })
+        });
+        demoData = await res.json();
+
+        // 1. Populate Stage 1 (Whiteboard + Avatar + Audio)
+        document.getElementById('whiteboardContent').innerHTML = demoData.step_2_segment_1.visual_svg;
+        document.getElementById('avatarContainer').innerHTML = demoData.step_2_segment_1.avatar_track || `<div class='text-xs text-slate-400'>Avatar Active</div>`;
+        document.getElementById('captionsBox').innerText = demoData.step_2_segment_1.script;
+        
+        if (demoData.step_2_segment_1.audio_track) {
+          const player = document.getElementById('audioPlayer');
+          player.src = demoData.step_2_segment_1.audio_track;
+          player.play().catch(e => console.log('Autoplay blocked by browser'));
+        }
+
+        // 2. Populate Checkpoint Question
+        document.getElementById('qPrompt').innerText = demoData.step_3_question_1.prompt;
+        const optsContainer = document.getElementById('qOptions');
+        optsContainer.innerHTML = '';
+        demoData.step_3_question_1.options.forEach(opt => {
+          const div = document.createElement('div');
+          div.className = "p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center space-x-3 cursor-pointer hover:border-sky-500";
+          div.innerHTML = `<input type="radio" name="opt" value="${opt.id}" class="text-sky-500"> <span class="text-sm text-slate-200"><strong>${opt.id}:</strong> ${opt.text}</span>`;
+          optsContainer.appendChild(div);
+        });
+
+        // 3. Populate Remediation
+        document.getElementById('miscType').innerText = demoData.step_4_misconception_evaluation.misconception?.misconception_type || "inverse_relationship_confusion";
+        document.getElementById('miscBelief').innerText = demoData.step_4_misconception_evaluation.misconception?.belief || "";
+        document.getElementById('remediatedWhiteboard').innerHTML = demoData.step_6_segment_2.visual_svg;
+
+        // 4. Populate Final Report & Trace
+        document.getElementById('traceBox').innerText = demoData.trace_summary_ascii;
+
+        // Switch to Teaching Stage
+        switchTab(3);
+
+      } catch (err) {
+        alert("Failed to execute Ohm's Law demo: " + err);
+      } finally {
+        btn.innerText = "Run Ohm's Law Adaptive Flow";
+        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+      }
+    }
+
+    function submitDemoMisconception() {
+      // Automatically advance to Screen 5 to demonstrate the remediation flow
+      switchTab(5);
+    }
+
+    function submitDemoCorrectAnswer() {
+      // Automatically advance to Screen 6
+      switchTab(6);
+    }
+  </script>
+</body>
+</html>

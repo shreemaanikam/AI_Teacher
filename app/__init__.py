@@ -6,15 +6,19 @@ from app.api.assessment import assessment_blueprint
 from app.api.visuals import visuals_blueprint
 from app.api.media import media_blueprint
 from app.api.trace import trace_blueprint
+from app.api.demo_ui import demo_ui_bp
 from app.config import Settings
 from app.integrations.agora import EnvironmentAgoraCredentialsProvider
 
 
 def create_app(settings: Settings | None = None) -> Flask:
     settings = settings or Settings.from_env()
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config["SETTINGS"] = settings
     app.config["AGORA_CREDENTIALS_PROVIDER"] = EnvironmentAgoraCredentialsProvider(settings)
+
+    # Register demo UI blueprint
+    app.register_blueprint(demo_ui_bp)
 
     # Register blueprints under versioned /api/v1 namespace
     app.register_blueprint(realtime_blueprint, url_prefix="/api/v1/realtime")

@@ -39,18 +39,32 @@ class AssessmentEngine:
         evaluator: Optional[AnswerEvaluator] = None,
         intervention_engine: Optional[InterventionEngine] = None,
         difficulty_controller: Optional[AdaptiveDifficultyController] = None,
+        repository = None,
     ):
+        from app.db.repository import get_teaching_repository
         self.evaluator = evaluator or AnswerEvaluator()
         self.intervention_engine = intervention_engine or InterventionEngine()
         self.difficulty_controller = difficulty_controller or AdaptiveDifficultyController()
+        self.repository = repository or get_teaching_repository()
         self._questions_store: Dict[str, Question] = {}
         self._initialize_sample_question_bank()
 
     def store_question(self, question: Question) -> None:
         self._questions_store[question.question_id] = question
+        try:
+            self.repository.save_question(question)
+        except Exception as e:
+            logger.warning(f"Could not persist question to database: {e}")
 
     def get_question(self, question_id: str) -> Optional[Question]:
-        return self._questions_store.get(question_id)
+        if question_id in self._questions_store:
+            return self._questions_store[question_id]
+        
+        q = self.repository.get_question(question_id)
+        if q is not None:
+            self._questions_store[question_id] = q
+            return q
+        return None
 
     def generate_checkpoint_question(
         self,

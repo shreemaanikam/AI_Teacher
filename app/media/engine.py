@@ -17,9 +17,8 @@ from app.media.models import (
 )
 from app.media.script_generator import TeachingScriptGenerator
 from app.media.tts.provider import VoiceProvider
-from app.media.tts.local_tts import LocalVoiceProvider
-from app.media.avatar.provider import AvatarProvider
-from app.media.avatar.procedural_avatar import ProceduralAvatarProvider
+from app.media.tts.factory import get_voice_provider
+from app.media.avatar.factory import get_avatar_provider
 from app.media.composer import VideoComposer
 from app.media.jobs import MediaJobQueue
 from app.visuals.models import VisualAsset
@@ -44,8 +43,8 @@ class MultimodalMediaEngine:
         job_queue: Optional[MediaJobQueue] = None,
     ):
         self.script_generator = script_generator or TeachingScriptGenerator()
-        self.voice_provider = voice_provider or LocalVoiceProvider()
-        self.avatar_provider = avatar_provider or ProceduralAvatarProvider()
+        self.voice_provider = voice_provider or get_voice_provider()
+        self.avatar_provider = avatar_provider or get_avatar_provider()
         self.composer = composer or VideoComposer()
         self.job_queue = job_queue or MediaJobQueue()
         self._segments_store: Dict[str, MediaSegment] = {}

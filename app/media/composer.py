@@ -20,6 +20,11 @@ from app.media.models import (
 )
 from app.visuals.models import VisualAsset
 
+import shutil
+import subprocess
+import tempfile
+import os
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,7 +33,74 @@ class VideoComposer:
     Assembles multimodal assets into a synchronized teaching segment.
     Enforces the core reliability invariant: media failures degrade gracefully
     and never destroy pedagogical progress or crash the lesson session.
+    Supports real MP4 rendering via FFmpeg when available.
     """
+
+    def is_ffmpeg_available(self) -> bool:
+        """Checks if ffmpeg binary is present on the host system."""
+        return shutil.which("ffmpeg") is not None
+
+    def render_mp4_video(
+        self,
+        segment_id: str,
+        audio: Optional[AudioAsset],
+        visual_asset: Optional[VisualAsset],
+        duration: float,
+    ) -> Optional[str]:
+        """
+        Synthesizes a real playable H.264/AAC MP4 video if ffmpeg is available.
+        Returns the absolute filepath to the MP4 file or None if ffmpeg is unavailable.
+        """
+        if not self.is_ffmpeg_available() or not audio:
+            return None
+
+        try:
+            out_dir = os.path.join(os.getcwd(), "data", "videos")
+            os.makedirs(out_dir, exist_ok=True)
+            mp4_path = os.path.join(out_dir, f"{segment_id}.mp4")
+
+            # Extract audio bytes from data URI
+            if audio.content_uri.startswith("data:audio/wav;base64,"):
+                import base64
+                b64_data = audio.content_uri.split(",", 1)[1]
+                wav_bytes = base64.b64decode(b64_data)
+            else:
+                return None
+
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as wav_file:
+                wav_file.write(wav_bytes)
+                wav_path = wav_file.name
+
+            try:
+                # Use FFmpeg testsrc / lavfi color canvas combined with audio to produce real valid MP4
+                cmd = [
+                    "ffmpeg",
+                    "-y",
+                    "-f", "lavfi",
+                    "-i", f"color=c=0x0f172a:s=1280x720:d={duration}",
+                    "-i", wav_path,
+                    "-c:v", "libx264",
+                    "-tune", "stillimage",
+                    "-pix_fmt", "yuv420p",
+                    "-c:a", "aac",
+                    "-b:a", "192k",
+                    "-shortest",
+                    mp4_path,
+                ]
+                result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+                if result.returncode == 0 and os.path.exists(mp4_path):
+                    logger.info(f"Successfully compiled real MP4 video to: {mp4_path}")
+                    return mp4_path
+                else:
+                    logger.warning(f"FFmpeg compilation returned non-zero code: {result.stderr.decode('utf-8', errors='ignore')[:200]}")
+                    return None
+            finally:
+                if os.path.exists(wav_path):
+                    os.remove(wav_path)
+
+        except Exception as e:
+            logger.warning(f"Failed to generate MP4 with FFmpeg: {e}. Falling back to interactive manifest.")
+            return None
 
     def generate_captions(self, script: TeachingScript, total_duration: float) -> CaptionAsset:
         """Splits spoken text into timed subtitle cues and builds WebVTT content."""
@@ -86,6 +158,10 @@ class VideoComposer:
 
         status = MediaStatus.FALLBACK if is_fallback else MediaStatus.READY
 
+        # Attempt real MP4 compilation if FFmpeg is available
+        segment_id = f"seg_{uuid.uuid4().hex[:12]}"
+        mp4_path = self.render_mp4_video(segment_id, audio, visual_asset, duration)
+
         # Construct responsive playback manifest for frontend / HTML player
         playback_manifest = {
             "version": "1.0",
@@ -101,6 +177,8 @@ class VideoComposer:
             "on_screen_text": script.on_screen_text,
             "pause_points": script.pause_points,
             "question_points": script.question_points,
+            "mp4_video_path": mp4_path,
+            "has_mp4_video": mp4_path is not None,
         }
 
         return MediaSegment(
@@ -117,7 +195,7 @@ class VideoComposer:
             visual_spec_id=visual_asset.spec_id if visual_asset else None,
             visual_asset_id=visual_asset.asset_id if visual_asset else None,
             captions=captions,
-            video_url=avatar.content_uri if avatar else (visual_asset.content if visual_asset else None),
+            video_url=mp4_path or (avatar.content_uri if avatar else (visual_asset.content if visual_asset else None)),
             playback_manifest=playback_manifest,
             is_fallback_mode=is_fallback,
             error_message=error_msg,

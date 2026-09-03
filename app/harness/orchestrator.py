@@ -39,20 +39,34 @@ class MasterTeachingOrchestrator:
         policy_engine: Optional[TeachingPolicyEngine] = None,
         tool_registry: Optional[ToolRegistry] = None,
         trace_logger: Optional[TeachingTraceLogger] = None,
+        repository = None,
     ):
+        from app.db.repository import get_teaching_repository
         self.policy_engine = policy_engine or TeachingPolicyEngine()
         self.tool_registry = tool_registry or ToolRegistry()
         self.trace_logger = trace_logger or TeachingTraceLogger()
         self.validator = StructuredOutputValidator()
+        self.repository = repository or get_teaching_repository()
         self._sessions: Dict[str, TeachingSessionState] = {}
 
     def get_session(self, session_id: str) -> TeachingSessionState:
-        if session_id not in self._sessions:
-            raise KeyError(f"Teaching session '{session_id}' not found.")
-        return self._sessions[session_id]
+        # Check in-memory cache first, then database repository
+        if session_id in self._sessions:
+            return self._sessions[session_id]
+        
+        session = self.repository.get_session(session_id)
+        if session is not None:
+            self._sessions[session_id] = session
+            return session
+
+        raise KeyError(f"Teaching session '{session_id}' not found.")
 
     def save_session(self, session: TeachingSessionState) -> None:
         self._sessions[session.session_id] = session
+        try:
+            self.repository.save_session(session)
+        except Exception as e:
+            logger.warning(f"Could not persist session to database: {e}")
 
     def start_session(
         self,

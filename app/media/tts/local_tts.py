@@ -10,7 +10,10 @@ import math
 import struct
 from typing import Dict, List, Optional
 from app.media.models import AudioAsset
-from app.media.tts.provider import VoiceProvider
+try:
+    from app.media.tts.base import VoiceProvider
+except ImportError:
+    from app.media.tts.provider import VoiceProvider
 
 
 class LocalVoiceProvider(VoiceProvider):
@@ -51,14 +54,21 @@ class LocalVoiceProvider(VoiceProvider):
         buffer.write(b"data")
         buffer.write(struct.pack("<I", num_samples * 2))
 
-        # Acoustic speech modulation signal
+        # Generate smooth multi-harmonic speech simulation waveform
         for i in range(num_samples):
-            t = float(i) / self.sample_rate
-            # Base harmonic 220Hz + overtone 440Hz + envelope
-            envelope = math.sin(math.pi * min(1.0, max(0.0, t / duration_seconds)))
-            sample = 0.2 * math.sin(2.0 * math.pi * 220.0 * t) + 0.1 * math.sin(2.0 * math.pi * 440.0 * t)
-            val = int(sample * envelope * 32767.0)
-            buffer.write(struct.pack("<h", max(-32768, min(32767, val))))
+            t = i / self.sample_rate
+            # Fundamental pitch + formants
+            sample = (
+                0.35 * math.sin(2 * math.pi * 160 * t)
+                + 0.25 * math.sin(2 * math.pi * 320 * t)
+                + 0.15 * math.sin(2 * math.pi * 800 * t)
+                + 0.10 * math.sin(2 * math.pi * 2400 * t)
+            )
+            # Syllable cadence envelope (2.5 Hz rhythm)
+            envelope = 0.5 * (1.0 + math.sin(2 * math.pi * 2.5 * t))
+            final_sample = int(sample * envelope * 16000)
+            final_sample = max(-32768, min(32767, final_sample))
+            buffer.write(struct.pack("<h", final_sample))
 
         return buffer.getvalue()
 
@@ -68,6 +78,7 @@ class LocalVoiceProvider(VoiceProvider):
         text: str,
         language: str = "en",
         voice_id: Optional[str] = None,
+        speed: float = 1.0,
     ) -> AudioAsset:
         duration = self.estimate_duration(text, language)
         wav_data = self._generate_wav_bytes(duration)
