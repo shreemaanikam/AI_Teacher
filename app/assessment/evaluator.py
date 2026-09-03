@@ -192,19 +192,19 @@ class AnswerEvaluator:
             score = 0.1
             feedback = f"Misconception identified: {misconception.belief}. {misconception.recommended_intervention or ''}"
             confidence = misconception.confidence
-        elif semantic_score >= 0.8:
+        elif (semantic_score >= 0.5 or len(term_matches) >= 2) and not found_anti:
             verdict = EvaluationVerdict.CORRECT
             score = 1.0
             feedback = "Excellent! Your explanation accurately captures the core scientific principles."
             confidence = 0.95
-        elif semantic_score >= 0.4:
+        elif (semantic_score >= 0.25 or len(term_matches) >= 1) and not found_anti:
             verdict = EvaluationVerdict.PARTIALLY_CORRECT
-            score = round(semantic_score, 2)
+            score = 0.5
             feedback = f"Partially correct. You noted {', '.join(term_matches)}, but make sure to explain: {', '.join(rubric_misses)}."
             confidence = 0.85
         else:
             verdict = EvaluationVerdict.INCORRECT
-            score = round(semantic_score, 2)
+            score = 0.0
             feedback = f"Not quite right. The expected answer involves: {question.expected_answer}."
             confidence = 0.90
 
