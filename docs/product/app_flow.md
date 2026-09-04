@@ -21,8 +21,8 @@ Primary learner navigation: `Dashboard`, `Learn`, `Library`, `Progress`, `Profil
 | Report | `/app/sessions/:id/report` | Score, strengths, gaps, citations, next steps | generating, complete, partial/error |
 | Progress | `/app/progress` | Mastery, history, learning paths | empty, populated, filtered |
 | Profile | `/app/profile` | Defaults, accessibility, language, data deletion | saved, invalid, deleting |
-| Operations | `/admin/operations` | Health, jobs, local model/runtime, and compute overview | healthy, degraded, incident |
-| Local models | `/admin/models` | Hardware profile, approved GGUF download/import, activation, evaluations | probing, downloading, quarantined, evaluating, active, incompatible |
+| Operations | `/admin/operations` | Health, jobs, providers, usage/cost, and service overview | healthy, degraded, incident |
+| AI providers | `/admin/providers` | Capability routing, approved configurations, evaluations, limits, and fallbacks | evaluating, active, rate-limited, degraded, disabled |
 
 ## FLOW-001 — First lesson from uploaded material
 
@@ -94,15 +94,14 @@ Document deletion previews affected lessons/assets. Confirmation immediately hid
 5. Administrators see run graph, agent/contract versions, duration, budget, validation result, fallback, and redacted error under audited access.
 6. Retry uses the same workflow/idempotency identity and never duplicates accepted artifacts or session progression.
 
-## FLOW-008 — First-run local model provisioning
+## FLOW-008 — Provider configuration and approval
 
-1. Setup probes CPU, RAM, NVIDIA/CUDA compatibility, Vulkan devices/drivers, and VRAM/shared memory without uploading hardware details.
-2. It recommends an approved runtime profile and model bundle. The UI shows download size, disk/RAM/VRAM estimate, expected speed tier, Hugging Face repository/revision, license, quantization, and limitations.
-3. User/admin explicitly accepts licenses and starts a resumable download, or chooses verified offline import. No model downloads during an ordinary lesson request.
-4. Files enter quarantine. Validation checks hash, manifest, GGUF metadata, architecture, pinned llama.cpp build, backend load, known-answer inference, and evaluation status.
-5. Successful artifacts activate atomically. Failed, tampered, or incompatible artifacts remain unusable with a safe reason and cleanup option.
-6. A fully provisioned health check runs with network disabled and confirms the selected CUDA, Vulkan, or CPU profile.
-7. If GPU acceleration later fails, the UI asks before switching to a materially slower CPU or smaller-model profile and preserves lesson state.
+1. An administrator registers a server-side provider credential and selects supported capabilities without exposing the secret to the browser or database.
+2. The UI shows provider/model version, purpose, license/terms, data boundary, region, retention, rate limits, expected latency/cost, evaluations, and limitations.
+3. Contract and quality checks validate schema handling, grounding, language, safety, timeout, rate-limit, and failure behavior using non-sensitive fixtures.
+4. A passing configuration is approved and activated for a capability; an independently approved fallback may be assigned.
+5. Health, usage, cost, errors, and rate limits remain visible. Disabling a configuration prevents new calls without erasing trace history.
+6. Provider failover preserves lesson state and never silently changes source scope, language, rubric, or teaching policy.
 
 ## Classroom behavior
 
@@ -134,8 +133,8 @@ Seek is allowed across completed content. Skipping an unanswered checkpoint requ
 | 409 | Refresh authoritative session/job state and explain the conflict. |
 | 413/415 | Explain size/type limits before retry. |
 | 429 | Show retry timing and avoid duplicate submission. |
-| Local model timeout/resource exhaustion | Show delayed/degraded state; offer approved smaller-model/CPU fallback, retry, or cancel; preserve completed work. |
-| Model missing/incompatible | Link to local model setup; do not download silently or use cloud inference. |
+| Provider timeout, outage, or rate limit | Show delayed/degraded state; use approved fallback, retry, or cancel while preserving completed work. |
+| Provider missing/misconfigured | Link to provider setup; do not expose credentials or bypass the approved capability route. |
 | 500 | Stable error ID, retry when safe, no stack/provider details. |
 
 ## Flow acceptance

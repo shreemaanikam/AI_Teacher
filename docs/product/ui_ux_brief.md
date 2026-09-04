@@ -71,19 +71,19 @@ Profile defaults prefill but remain overridable. Advanced settings are collapsed
 
 Show meaningful milestones: understanding source, planning, creating explanations, rendering visuals, generating voice/avatar, final checks. Segments ready for safe progressive playback may be exposed. Provide cancel and background notification; failures identify the affected component and fallback.
 
-The learner sees outcome-oriented stages, not a noisy list of internal agents. A compact `How this lesson was created` disclosure may show specialized knowledge, teaching, assessment, and media contributions together with local model digest, quantization, backend, and source disclosures.
+The learner sees outcome-oriented stages, not a noisy list of internal agents. A compact `How this lesson was created` disclosure may show specialized knowledge, teaching, assessment, and media contributions together with provider/model versions, generated-media labels, and source disclosures.
 
-### Local model setup
+### Provider operations
 
-Model management is an administrative/setup surface, not part of normal classroom complexity. It shows:
+Provider management is an administrative surface, not part of normal classroom complexity. It shows:
 
-- detected CPU/GPU, selected `CUDA`, `Vulkan`, or `CPU` profile, and whether the exact device/driver is tested;
-- recommended GGUF bundle with task, quantization, context, size, RAM/VRAM estimate, expected performance tier, source revision, license, and limitations;
-- explicit `Download and activate`, `Import offline`, pause/resume, quarantine/verification/evaluation stages, and safe removal;
-- health, resident model, memory use, queue/admission status, and local-only/network-isolated indicator;
-- clear language that Vulkan capability does not guarantee high performance and CPU fallback may be slower.
+- capability routes and active/fallback provider/model versions;
+- evaluation status for quality, grounding, language, safety, latency, and cost;
+- license/terms, purpose, data boundary, retention/residency, limitations, and approval owner;
+- health, rate limits, queue state, usage/cost budgets, circuit-breaker state, and recent redacted errors;
+- controls to test, activate, disable, or replace a configuration without displaying credentials.
 
-Never download weights because a learner pressed `Create lesson`. License acceptance and large storage use require a separate informed action. Do not claim a model is secure or compatible merely because it is GGUF; show verification and evaluation status.
+Never expose provider credentials or silently activate an unevaluated model. A learner action may use only configurations already approved for the capability and data boundary.
 
 ### Interactive classroom
 
@@ -141,7 +141,7 @@ Teacher copy is concise, encouraging, specific, and age/level appropriate. Prefe
 - Topic mode states that explanations use general AI knowledge.
 - Uncertain/low-evidence output says so and offers source review.
 - AI-generated visuals and avatar are disclosed without repetitive badges.
-- State that inference is local and distinguish it from the one-time Hugging Face model download. Do not imply offline operation until required models are installed and a network-blocked health check passes.
+- Disclose when learner/source content is processed by an external AI or media provider and link to concise data-use details.
 - Destructive actions state affected sources/lessons and require confirmation; account deletion requires re-authentication.
 - Do not use manipulative streaks, shame, or inaccessible countdown pressure.
 - Never present learner inferences as objective identity claims. Use language such as “Based on your recent answers, you may want to revisit…” and provide `Why am I seeing this?`, correction, and deletion controls.

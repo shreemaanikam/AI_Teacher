@@ -22,7 +22,7 @@ Status values: `PLANNED`, `IN_PROGRESS`, `COMPLETE`, `BLOCKED`, `DEPRECATED`, `R
 | F-010 | Async jobs and realtime progress | IN_PROGRESS | FR-015,032,050 | Idempotency, retry, reconnection |
 | F-011 | Safety, privacy, and operations | PLANNED | FR-051–053 | Upload/prompt safety, deletion, audit |
 | F-012 | Multi-agent teaching engine | PLANNED | FR-060–065 | Contracts, orchestration, artifacts, isolation |
-| F-013 | Local llama.cpp model platform | PLANNED | FR-070–076 | GGUF registry, CUDA/Vulkan/CPU, supply chain |
+| F-013 | AI and media provider platform | PLANNED | FR-070–076 | Gateway, model router, adapters, disclosure, usage/cost |
 
 ## Feature acceptance
 
@@ -94,12 +94,9 @@ Status values: `PLANNED`, `IN_PROGRESS`, `COMPLETE`, `BLOCKED`, `DEPRECATED`, `R
 
 ### F-010 — Async jobs and realtime progress
 
-- [x] Optional Agora Web RTC adapter joins/leaves, publishes local media, subscribes to remote media, and cleans up tracks.
-- [x] Validated Flask credential-bootstrap endpoint exists behind an Agora provider port; development temporary-token mode is documented.
-- [ ] Production AccessToken2 minting, authenticated lesson/channel authorization, token renewal, consent, and privacy/residency review.
 - [ ] Separate ingestion, AI, and media queues with progress events.
 - [ ] Stable idempotency, bounded retry, timeout, cancellation, heartbeat, and dead-letter behavior.
-- [ ] SSE reconnects from cursor and reconciles with REST.
+- [ ] WebSocket event streams reconnect from a cursor and reconcile with REST snapshots.
 
 ### F-011 — Safety, privacy, and operations
 
@@ -123,19 +120,17 @@ Status values: `PLANNED`, `IN_PROGRESS`, `COMPLETE`, `BLOCKED`, `DEPRECATED`, `R
 
 F-012 is foundational: F-003–F-010 use specialist contracts coordinated by it. This does not imply every specialist is an LLM or separately deployed service.
 
-### F-013 — Local llama.cpp model platform
+### F-013 — AI and media provider platform
 
-- [ ] Pinned, checksum-verified `llama.cpp` CUDA, Vulkan, and CPU runtime artifacts start through one Model Runtime Gateway.
-- [ ] Hardware discovery selects only tested profiles and reports device, backend, memory, compatible models, and expected performance.
-- [ ] NVIDIA CUDA and targeted Intel Vulkan acceptance suites pass; unsupported acceleration falls back locally to CPU or a smaller approved GGUF.
-- [ ] Model manager supports explicit allowlisted Hugging Face downloads and verified offline import without arbitrary URLs or partial activation.
-- [ ] Manifests retain immutable revision, hash, license, GGUF metadata, quantization, compatibility, memory estimate, evaluations, and status.
-- [ ] Agents route by capability profile and share resident `llama-server` instances; no hosted inference path or duplicate per-agent weight loading exists.
-- [ ] Fully provisioned teaching works with inference-worker network egress blocked.
-- [ ] Reproducible local fine-tuning records dataset/base lineage, licenses/consents, recipe, evaluations, GGUF conversion/quantization, model card, and checksum.
-- [ ] Neural voice/avatar/visual models pass the same `llama.cpp` compatibility gate; unsupported architectures use deterministic local tooling or documented degraded mode.
-- [ ] Cross-backend evaluation confirms contract equivalence and accepted pedagogy/language quality tolerances.
+- [ ] One AI Gateway exposes capability ports for LLM, embeddings, reranking, evaluation, translation, image generation, STT, TTS, and avatar/video.
+- [ ] Model routing selects approved provider/model configurations by task, language, quality, latency, availability, and budget policy.
+- [ ] Provider adapters implement server-side credentials, deadlines, bounded retry, concurrency/rate limits, normalized errors, usage/cost telemetry, fakes, and contract tests.
+- [ ] Pydantic, evidence, safety, permission, and teaching-policy validators gate every provider result used by application code.
+- [ ] Provider/model records disclose vendor, version, purpose, license/terms, data boundary, retention/residency, limitations, evaluation, and approval.
+- [ ] Provider failures use an approved equivalent adapter or visible deterministic/accessibility fallback without changing lesson objectives or safety policy.
+- [ ] PyMuPDF, python-docx, python-pptx, OCR, deterministic renderers, FFmpeg, and S3-compatible storage have tested adapters.
+- [ ] Structured traces connect prompts, evidence, provider/model, latency, token/media usage, cost, policy decisions, and fallbacks without logging secrets or private content by default.
 
 ## Release acceptance
 
-The MVP is demo-ready only when F-001 through F-008, F-010, F-012, F-013, and the mandatory controls in F-011 are complete; F-009 may ship with basic recommendations. The demo must show upload/topic -> multi-agent plan -> grounded media teaching -> response analysis -> adaptation -> final assessment -> report, plus an agent trace and proof that inference remains local on a validated backend.
+The MVP is demo-ready only when F-001 through F-008, F-010, F-012, F-013, and the mandatory controls in F-011 are complete; F-009 may ship with basic recommendations. The demo must show upload/topic -> multi-agent plan -> grounded media teaching -> response analysis -> adaptation -> final assessment -> report, plus an agent/provider trace and third-party technology disclosure.

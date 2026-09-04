@@ -50,7 +50,7 @@ Success means: material-derived claims are cited; profile and time change the pl
 
 ### Later enhancements
 
-- Real-time streaming avatar, emotion awareness, personalities, flashcards, homework, exam/revision modes, concept maps, advanced analytics, simulations, classrooms, and mobile apps. Local model execution is mandatory rather than a later enhancement.
+- Real-time streaming avatar, emotion awareness, personalities, flashcards, homework, exam/revision modes, concept maps, advanced analytics, simulations, classrooms, mobile apps, and optional local-model deployment.
 
 ### Non-goals for MVP
 
@@ -100,13 +100,13 @@ Success means: material-derived claims are cited; profile and time change the pl
 | FR-063 | Persist observable learner evidence separately from AI-inferred traits, including confidence, supporting evidence, model version, expiry/review status, and learner correction/deletion controls. | Must |
 | FR-064 | Continue or degrade safely when an optional specialist fails; mandatory artifact failures must be retryable and visible. | Must |
 | FR-065 | Permit an agent implementation to run in-process, as a queue worker, or behind an authenticated API without changing its domain contract. | Should |
-| FR-070 | Execute every neural model locally through a project-pinned `llama.cpp` runtime using a supported GGUF model; no agent may call a hosted inference API. | Must |
-| FR-071 | Provide validated CUDA and Vulkan runtime profiles, selecting CUDA for compatible NVIDIA GPUs and Vulkan for compatible GPUs including Intel devices; provide CPU fallback when neither is usable. | Must |
-| FR-072 | Acquire pretrained model artifacts only from an allowlisted Hugging Face repository/revision or from the project's reproducible local fine-tuning pipeline. | Must |
-| FR-073 | Verify model license, immutable revision, SHA-256 digest, GGUF metadata, architecture compatibility, quantization, context requirements, and evaluation status before activation. | Must |
-| FR-074 | Never silently download or activate a model. Show size, source, license, hardware estimate, and consent before transfer; support offline import with the same verification. | Must |
-| FR-075 | Voice/avatar/video specialists may use a neural model only when its architecture is supported by `llama.cpp` and packaged as approved GGUF. Otherwise they must use deterministic local non-model tooling or expose a documented degraded mode. | Must |
-| FR-076 | Locally fine-tuned models must retain base-model provenance, dataset license/consent record, training recipe, evaluation report, conversion and quantization metadata, and generated model card. | Must |
+| FR-070 | Route LLM, embedding, reranking, evaluation, translation, image, speech, and avatar capabilities through replaceable provider interfaces. | Must |
+| FR-071 | Select models by capability and quality policy without exposing provider-specific identifiers to domain workflows. | Must |
+| FR-072 | Disclose significant third-party APIs, models, libraries, services, licenses, data boundaries, and limitations. | Must |
+| FR-073 | Validate probabilistic output with schemas, evidence rules, safety checks, and deterministic teaching policy before it changes state. | Must |
+| FR-074 | Track provider/model version, prompt version, evidence, latency, usage, cost, and fallback for each material AI decision. | Must |
+| FR-075 | Use provider-backed multilingual STT, TTS, image generation, and avatar/video behind adapters, with typed-input and accessible media fallbacks. | Must |
+| FR-076 | Generate short media segments and use FFmpeg plus object storage to normalize, caption, assemble, and deliver adaptive lessons. | Must |
 
 ## Non-functional requirements
 
@@ -123,11 +123,11 @@ Success means: material-derived claims are cited; profile and time change the pl
 | NFR-009 | Portability | LLM, speech, avatar, vector, and object storage are behind interfaces. |
 | NFR-010 | Cost | Per-user quotas, token/media budgets, caching, and cost telemetry. |
 | NFR-011 | Localization | UTF-8 and BCP 47 tags; mixed scripts and text expansion supported. |
-| NFR-012 | Auditability | Record prompt, model digest/manifest, llama.cpp build/backend, citations, rubric, and trace IDs. |
+| NFR-012 | Auditability | Record prompt, provider/model version, citations, rubric, usage/cost, fallback, and trace IDs. |
 | NFR-013 | Agent governance | Every invocation has a purpose-scoped context, deadline, budget, idempotency key, contract version, trace, and terminal outcome. |
 | NFR-014 | Modularity | Agent contracts are independent of LLM/provider/deployment mechanism and have conformance tests. |
-| NFR-015 | Local privacy | After approved model/source downloads, teaching inference works without internet and sends no lesson, learner, prompt, or telemetry data externally by default. |
-| NFR-016 | Hardware portability | CUDA, Vulkan, and CPU profiles produce contract-equivalent outputs within documented quality tolerances. |
+| NFR-015 | Provider privacy | External services receive only purpose-minimized data under disclosed consent, retention, deletion, and residency controls. |
+| NFR-016 | Provider portability | Capability contracts and conformance tests permit provider replacement without changing lesson-domain behavior. |
 
 ## Business rules
 
@@ -141,8 +141,8 @@ Success means: material-derived claims are cited; profile and time change the pl
 - Only the orchestrator may authorize workflow transitions. Specialist agents propose artifacts or actions; application policy validates them.
 - An agent may not invoke another specialist directly. It returns its result to the orchestrator, which decides the next task.
 - Learner facts such as attempts remain immutable evidence. Inferences such as “may misunderstand resistance” are confidence-scored, reviewable, and never treated as sensitive diagnoses.
-- The runtime may fetch model artifacts only during an explicit model-management action. Normal teaching execution is local-only and network-independent.
-- “All models use llama.cpp” applies to neural inference. Deterministic renderers, parsers, databases, media encoders, and workflow code are not models and run as ordinary local tools.
+- Provider responses are proposals, not commands; validated application policy owns transitions and persisted cognitive updates.
+- Exact technical visuals use deterministic renderers; generative providers are used when illustration is appropriate.
 
 ## Acceptance scenarios
 
@@ -150,19 +150,19 @@ Success means: material-derived claims are cited; profile and time change the pl
 2. “React interview preparation” works without an upload, uses code visuals, asks questions, answers a follow-up, and resumes the plan.
 3. Hindi-to-English switching retains position and assessment context.
 4. An image-only PDF is processed through OCR or rejected with a recoverable explanation.
-5. Local avatar/media runtime failure preserves an audio/caption/visual lesson and offers retry.
+5. Voice/avatar/media provider failure preserves a typed, captioned, visual lesson and offers retry.
 6. Identifier tampering cannot expose another user's source, lesson, citation, report, or asset.
 7. Replacing a quiz or voice agent implementation leaves orchestrator contracts and stored lesson/session semantics unchanged.
 8. A trace shows which agents produced, validated, rejected, or revised every lesson artifact without exposing private prompt content in ordinary logs.
-9. The same lesson workflow passes on a supported NVIDIA/CUDA machine, a supported Intel/Vulkan machine, and CPU fallback using approved model profiles.
-10. Blocking outbound inference traffic does not break a fully provisioned lesson; attempting to activate a tampered/unapproved GGUF file fails closed.
+9. Replacing an LLM, embedding, speech, or avatar provider leaves domain contracts and stored session semantics unchanged.
+10. A provider outage, timeout, invalid response, or rate limit produces a controlled fallback or visible recoverable state without an illegal teaching transition.
 
 ## Constraints and assumptions
 
 - The repository contains documentation only as of 2026-08-31; every feature is `PLANNED`.
 - Initial delivery is a responsive web application.
 - Probabilistic AI requires grounding, validation, fallbacks, and visible uncertainty.
-- `llama.cpp` and approved local GGUF models replace hosted inference providers. Model sources, licenses, revisions, hashes, quantizations, fine-tuning lineage, and hardware profiles must be disclosed.
+- Hosted AI/media providers are permitted only behind approved adapters. Provider identity, model/version, licenses/terms, data handling, limitations, and costs must be disclosed.
 - Users must have rights to process their uploads.
 
 Requirement-to-feature mapping is in `../execution/features.md`; technical controls are in `../technical/technical_requirement_document.md`; end-to-end paths are in `app_flow.md`.

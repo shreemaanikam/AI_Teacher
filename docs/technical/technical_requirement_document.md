@@ -8,17 +8,17 @@ This document defines implementation constraints for the planned AI Teacher. Pro
 
 | Layer | Required baseline |
 | --- | --- |
-| Backend | Python 3.12+, Flask 3.x, Gunicorn in production |
+| Backend | Python 3.12+, FastAPI, Pydantic; ASGI server in production |
 | API schemas | Pydantic 2.x; OpenAPI generated and versioned |
 | Async work | Celery 5.x with Redis 7.x broker/cache |
 | Database | PostgreSQL 16+ with pgvector; SQLAlchemy 2.x and Alembic |
-| Frontend | Node 22 LTS, TypeScript 5.x, React 19, Vite 7 |
+| Frontend | Node LTS, Next.js, React, TypeScript, Tailwind CSS; Recharts, Lucide, and Framer Motion where needed |
 | Object storage | S3-compatible API; MinIO locally |
-| Testing | pytest, Vitest/Testing Library, Playwright; runtime/model contract and AI evaluation suites |
+| Testing | pytest, frontend component tests, Playwright; provider contract and AI evaluation suites |
 | Packaging | `pyproject.toml` with locked Python dependencies; `package-lock.json` |
-| Deployment | OCI containers; Docker Compose locally; local/private-network production containers |
+| Deployment | OCI containers; Docker Compose locally; simple cloud deployment with GitHub Actions CI/CD |
 
-`llama.cpp` is the sole neural-model inference runtime. Hosted inference APIs are outside the approved architecture.
+LLM, embedding, reranking, image, speech, and avatar capabilities are accessed through provider-neutral interfaces. Concrete providers and models are deployment configuration and must be disclosed, evaluated, and replaceable.
 
 Minor versions are locked in implementation manifests. Upgrades require tests and, for breaking changes, a decision record.
 
@@ -29,7 +29,7 @@ Minor versions are locked in implementation manifests. Upgrades require tests an
 | TR-001 | Use an application factory and dependency injection at composition boundaries. |
 | TR-002 | Separate API, service, domain, repository, AI, ingestion, media, and worker concerns. |
 | TR-003 | API/worker processes are stateless; durable state lives only in PostgreSQL/object storage. |
-| TR-004 | Local AI/media runtimes and storage services implement internal provider interfaces and normalize errors. |
+| TR-004 | AI, OCR, speech, avatar, media, and storage services implement internal provider interfaces and normalize errors. |
 | TR-005 | All LLM outputs used by code conform to versioned Pydantic/JSON schemas. Invalid output gets one repair attempt, then fails safely. |
 | TR-006 | Long operations run as background jobs; requests return `202` plus job/resource identifiers. |
 | TR-007 | Jobs are idempotent, bounded-retry, timeout-controlled, cancellable, observable, and dead-letterable. |
@@ -49,8 +49,8 @@ Minor versions are locked in implementation manifests. Upgrades require tests an
 | AG-006 | Every run has `task_id`, `workflow_id`, `agent_type/version`, input/output schema versions, idempotency key, deadline, budget, trace ID, context references, result status, confidence, provenance, warnings, and redacted error. |
 | AG-007 | The orchestrator enforces a finite execution graph, maximum attempts/hops, token/cost budgets, deadline propagation, cancellation, and loop prevention. |
 | AG-008 | Agent output is untrusted until schema, policy, evidence, safety, and domain-invariant validators accept it. Invalid output cannot advance the teaching state. |
-| AG-009 | Agent implementations may be deterministic code, a local `llama.cpp` workflow, or a hybrid, but must pass the same conformance and evaluation contract. Hosted model providers are prohibited. |
-| AG-010 | Deployment location (in-process, Celery worker, authenticated service API) is hidden behind the same port; distributed IPC uses authenticated, encrypted, replay-safe messages. |
+| AG-009 | Agent implementations may be deterministic code, an AI Gateway workflow, or a hybrid, but must pass the same conformance and evaluation contract. Provider SDKs cannot enter domain code. |
+| AG-010 | Deployment location (in-process, background worker, authenticated service API) is hidden behind the same port; distributed IPC uses authenticated, encrypted, replay-safe messages. |
 | AG-011 | Synchronous interactive paths invoke the minimum agent set. Planning/media work is precomputed asynchronously to meet latency budgets. |
 | AG-012 | Agent/model/prompt rollout is versioned, observable, canaried, and independently reversible when stored artifact schemas remain compatible. |
 
@@ -65,35 +65,20 @@ Minor versions are locked in implementation manifests. Upgrades require tests an
 
 Deterministic parsing, grading, rendering, and policy logic remains ordinary code even when exposed through an agent contract. “Agent” denotes a bounded capability, not necessarily another LLM call.
 
-## Local inference and model supply chain
+## AI model and provider gateway
 
 | ID | Requirement |
 | --- | --- |
-| LM-001 | Pin `llama.cpp` to an audited commit/build identifier; do not depend on a floating branch or unverified binary. |
-| LM-002 | Ship separate tested runtime artifacts/profiles for `GGML_CUDA=ON`, `GGML_VULKAN=ON`, and CPU fallback. Backend detection is explicit and persisted. |
-| LM-003 | Use `llama-server` behind an internal loopback/private interface. Agents call a Model Runtime Gateway, not `llama-server` directly. |
-| LM-004 | Only GGUF architectures/features supported by the pinned `llama.cpp` build are eligible. Startup performs a model/backend capability probe and test inference. |
-| LM-005 | A model manifest pins Hugging Face repository, immutable commit revision, filename, SHA-256, license, architecture, task, quantization, context size, chat template, tokenizer metadata, memory estimates, and evaluation version. |
-| LM-006 | Downloads use the Hugging Face Hub with explicit consent, resumable transfer, temporary quarantine, checksum/signature where available, license gate, and atomic activation. Arbitrary URLs are prohibited. |
-| LM-007 | Offline import uses the same allowlist, manifest, license, checksum, compatibility, malware, and evaluation gates as online download. |
-| LM-008 | Fine-tuning occurs locally in an isolated training workspace. Approved base weights/datasets are pinned; data lineage, consent/license, recipe, seed, metrics, adapter, merge, GGUF conversion, quantization, and final checksum are reproducible. |
-| LM-009 | Fine-tuning may use tooling other than `llama.cpp`; the deployed inference artifact must be supported GGUF and all production inference must run through `llama.cpp`. |
-| LM-010 | The gateway manages model residency, shared instances, context/KV-cache budgets, GPU-layer offload, batching, concurrency, admission control, warmup, health, and eviction so logical agents do not load duplicate weights. |
-| LM-011 | CUDA is selected only after a successful NVIDIA capability/VRAM probe. Vulkan is the portable GPU profile and must be validated on targeted Intel hardware. CPU fallback is always available. |
-| LM-012 | Backend selection never changes the agent contract. Model/backend evaluation baselines detect unacceptable quantization or numerical quality regressions. |
-| LM-013 | No cloud fallback exists. On model/backend failure, use an approved smaller local model, CPU fallback, deterministic implementation, or visible degraded/paused state. |
-| LM-014 | Network egress from inference workers is denied after provisioning. Model download/fine-tuning processes are separated from serving processes. |
-| LM-015 | Arbitrary TTS, diffusion, lip-sync, and video models are not assumed compatible with `llama.cpp`. They are permitted only after pinned-runtime compatibility and evaluation; otherwise use deterministic local media tooling/fallback. |
-
-### Runtime profiles
-
-| Profile | Target | Required validation |
-| --- | --- | --- |
-| `cuda` | Compatible NVIDIA RTX/other NVIDIA GPU | driver/toolkit/build compatibility, device/VRAM probe, backend tests, representative agent benchmark |
-| `vulkan` | Vulkan-capable GPU, including targeted Intel Arc/iGPU devices | loader/driver/device probe, operation support, memory test, representative benchmark |
-| `cpu` | Supported x86-64 baseline | ISA detection, thread/memory limit, representative benchmark |
-
-Vulkan support does not guarantee acceptable performance on every Intel GPU. Publish a tested hardware matrix and select quantization, context, and concurrency from measured memory and latency.
+| LM-001 | The AI Gateway is the only model client and exposes capability-based ports for LLM, embeddings, reranking, evaluation, translation, image generation, STT, TTS, and avatar/video. |
+| LM-002 | Provider adapters isolate SDKs, credentials, streaming, errors, rate limits, and usage accounting from application and domain code. |
+| LM-003 | Model routing is task-specific and policy-controlled; specialists request capabilities rather than arbitrary providers or model names. |
+| LM-004 | Every provider/model configuration records vendor, model/version, purpose, data boundary, license/terms, region where applicable, quality evaluation, limits, and approval status. |
+| LM-005 | Calls use deadlines, bounded retries with jitter, concurrency limits, circuit breakers, cancellation where supported, and normalized errors. |
+| LM-006 | Output consumed by code is Pydantic/schema validated and subject to evidence, safety, permission, and policy checks. |
+| LM-007 | Provider failure selects only an approved equivalent adapter or a visible deterministic/degraded path; fallback cannot change objectives, source scope, language, or safety policy silently. |
+| LM-008 | Secrets remain server-side and never appear in browser bundles, logs, traces, or stored task envelopes. |
+| LM-009 | External calls receive purpose-minimized content and require documented consent, retention, residency, and deletion treatment before production use. |
+| LM-010 | Prompt, provider/model version, parameters, evidence references, schema version, latency, token/media usage, cost estimate, result, and fallback are auditable. |
 
 ## RAG and AI requirements
 
@@ -105,10 +90,10 @@ Vulkan support does not guarantee acceptable performance on every Intel GPU. Pub
 | AI-004 | Prompts delimit retrieved content as data and explicitly reject instructions within it. |
 | AI-005 | Planner output includes objectives, prerequisites, duration, segments, evidence, visuals, interactions, and assessment mappings. |
 | AI-006 | Evaluation uses deterministic graders where possible and rubric-based model grading otherwise; confidence gates mastery changes. |
-| AI-007 | Prompt template, model manifest/digest, llama.cpp build/backend, sampling parameters, evidence IDs, schema version, latency, and token usage are auditable. |
+| AI-007 | Prompt template, provider/model version, parameters, evidence IDs, schema version, latency, token/media usage, and cost are auditable. |
 | AI-008 | AI regression datasets test grounding, citation, pedagogy, language, safety, and adaptation before prompt/model releases. |
 | AI-009 | Topic-only knowledge is labeled separately from uploaded-source evidence; invented citations are prohibited. |
-| AI-010 | Local model/backend fallback cannot silently change language, objectives, source scope, quality gate, or safety policy. |
+| AI-010 | Provider/model fallback cannot silently change language, objectives, source scope, quality gate, or safety policy. |
 | AI-011 | Learner-model output separates observations from inferences; each inference carries confidence, evidence references, sensitivity category, expiry, and algorithm/model version. |
 | AI-012 | A grounding validator reviews material-derived teaching artifacts before publication; unsupported critical claims are rejected, revised, or labeled uncertain. |
 
@@ -126,7 +111,7 @@ Vulkan support does not guarantee acceptable performance on every Intel GPU. Pub
 - RFC 9457 problem details represent errors; validation errors identify safe field paths.
 - Mutating asynchronous endpoints accept `Idempotency-Key`.
 - Cursor pagination is used for potentially growing collections.
-- SSE is the baseline for job/session events; WebSocket is reserved for bidirectional realtime features.
+- WebSockets are the baseline for job and interactive lesson events; REST supports commands and state reconciliation.
 - Clients reconnect using a last-event cursor and reconcile from authoritative REST state.
 - Optimistic concurrency protects teaching-session transitions; duplicate responses return the original result or a conflict.
 
@@ -146,7 +131,7 @@ Vulkan support does not guarantee acceptable performance on every Intel GPU. Pub
 
 | Concern | Target/control |
 | --- | --- |
-| Ordinary API latency | p95 < 500 ms excluding local model/background work |
+| Ordinary API latency | p95 < 500 ms excluding provider and background work |
 | Topic plan | first usable plan target < 30 s on a documented recommended local profile |
 | Progress | event within 2 s of a persisted job-state transition |
 | llama-server calls | explicit connect/read timeout, admission/concurrency bulkhead, health circuit |
@@ -157,7 +142,8 @@ Vulkan support does not guarantee acceptable performance on every Intel GPU. Pub
 
 ## Frontend requirements
 
-- React is a single responsive TypeScript client; server-rendered Flask is limited to health/error/bootstrap surfaces.
+- Next.js provides the responsive TypeScript web application; FastAPI exposes versioned REST and WebSocket contracts.
+- Tailwind CSS supplies design tokens and responsive utilities; Recharts renders analytics, Lucide supplies icons, and Framer Motion is limited to subtle transitions that respect reduced-motion preferences.
 - Server state uses a query cache; lesson runtime uses a scoped state machine/store. Do not duplicate authoritative server data globally.
 - The player supports keyboard controls, captions, transcript, reduced motion, audio-only mode, reconnection, and checkpoint focus management.
 - Escape user/source content by default; sanitized Markdown uses an allowlist with external link protections.
@@ -165,7 +151,7 @@ Vulkan support does not guarantee acceptable performance on every Intel GPU. Pub
 
 ## Observability
 
-Emit structured JSON logs with timestamp, severity, service, environment, trace ID, actor/resource IDs, event, duration, outcome, `llama.cpp` build, backend, model digest, tokens, and estimated compute where applicable. OpenTelemetry spans connect HTTP, queue, database, retrieval, and local runtime operations. Alerts cover queue age, job failure, API errors/latency, database saturation, model-server health, and resource exhaustion.
+Emit structured JSON logs with timestamp, severity, service, environment, trace ID, actor/resource IDs, event, duration, outcome, provider/model version, tokens/media units, cost estimate, and fallback where applicable. OpenTelemetry spans connect HTTP, WebSocket, queue, database, retrieval, and provider operations. Alerts cover queue age, job failure, API errors/latency, database saturation, provider health/rate limits, and resource exhaustion.
 
 Agent metrics additionally include success/rejection/repair rate by agent version, schema failures, evidence coverage, confidence distribution, queue and execution time, orchestration hops, fallback frequency, token/media cost, and evaluator disagreement. Prompt or private context bodies are excluded from normal telemetry.
 
@@ -177,23 +163,23 @@ The initial coverage target is 80% for domain/services with mandatory direct tes
 
 ## Configuration and environments
 
-Use `development`, `test`, `staging`, and `production`. Validate required configuration at startup. Separate databases, buckets, queues, keys, model caches, and runtime sockets per environment. Feature flags may switch approved model/backend profiles or experimental pedagogy but may not bypass authorization, safety, provenance, or schema validation.
+Use `development`, `test`, `staging`, and `production`. Validate required configuration at startup. Separate databases, buckets, queues, credentials, and provider configurations per environment. Feature flags may switch approved provider/model routes or experimental pedagogy but may not bypass authorization, safety, provenance, or schema validation.
 
 ## Repository contract
 
 ```text
-app/  frontend/  migrations/  tests/  evals/  scripts/  docs/
-compose.yaml  pyproject.toml  package.json  .env.example
+backend/  frontend/  migrations/  tests/  evals/  scripts/  docs/
+compose.yaml  pyproject.toml  frontend/package.json  .env.example
 ```
 
 Agent-specific layout:
 
 ```text
-app/agents/contracts/       versioned envelopes and artifact schemas
-app/agents/registry/        capabilities and deployment adapters
-app/agents/specialists/     bounded implementations grouped by domain
-app/agents/validators/      schema, evidence, safety, privacy, domain gates
-app/orchestration/          workflow definitions, policies, budgets, context broker
+backend/agents/contracts/       versioned envelopes and artifact schemas
+backend/agents/registry/        capabilities and deployment adapters
+backend/agents/specialists/     bounded implementations grouped by domain
+backend/agents/validators/      schema, evidence, safety, privacy, domain gates
+backend/orchestration/          workflow definitions, policies, budgets, context broker
 tests/agent_contracts/      conformance tests shared by every implementation
 evals/agents/               versioned quality/ablation datasets and thresholds
 ```

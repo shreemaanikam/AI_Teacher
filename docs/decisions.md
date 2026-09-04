@@ -10,7 +10,7 @@ These decisions establish the initial target architecture on 2026-08-31. Because
 | --- | --- | --- |
 | ADR-001 | Modular monolith with asynchronous worker pools | ACCEPTED |
 | ADR-002 | PostgreSQL with pgvector as authoritative store | ACCEPTED |
-| ADR-003 | React TypeScript client and versioned Flask REST API | ACCEPTED |
+| ADR-003 | React TypeScript client and versioned Flask REST API | SUPERSEDED by ADR-018 |
 | ADR-004 | Runtime-neutral agent and media adapters | ACCEPTED |
 | ADR-005 | State-machine-controlled adaptive teaching | ACCEPTED |
 | ADR-006 | Evidence-preserving hybrid RAG | ACCEPTED |
@@ -22,9 +22,10 @@ These decisions establish the initial target architecture on 2026-08-31. Because
 | ADR-012 | Agents produce immutable artifacts and never persist domain state directly | ACCEPTED |
 | ADR-013 | Logical agent modularity before physical microservices | ACCEPTED |
 | ADR-014 | Separate learner observations from confidence-scored inferences | ACCEPTED |
-| ADR-015 | llama.cpp is the sole neural inference runtime | ACCEPTED |
-| ADR-016 | CUDA, Vulkan, and CPU are first-class local runtime profiles | ACCEPTED |
-| ADR-017 | Verified Hugging Face or reproducible local fine-tune is the only model supply chain | ACCEPTED |
+| ADR-015 | llama.cpp is the sole neural inference runtime | SUPERSEDED by ADR-018 |
+| ADR-016 | CUDA, Vulkan, and CPU are first-class local runtime profiles | SUPERSEDED by ADR-018 |
+| ADR-017 | Verified Hugging Face or reproducible local fine-tune is the only model supply chain | SUPERSEDED by ADR-018 |
+| ADR-018 | Adopt the complete hackathon technology blueprint | ACCEPTED |
 
 ## ADR-001 — Modular monolith with asynchronous worker pools
 
@@ -170,15 +171,17 @@ These decisions establish the initial target architecture on 2026-08-31. Because
 
 **Consequences:** Setup is slower and model choice curated. Arbitrary URLs and untracked weights are rejected; offline import follows the same gates. Fine-tuning frameworks may differ, but deployed inference remains llama.cpp-only.
 
-## ADR-018 — Agora is an optional RTC transport, not an inference runtime
+## ADR-018 — Adopt the complete hackathon technology blueprint
 
-**Context:** Interactive lessons benefit from low-latency learner media and interruption-ready delivery, but the approved architecture requires neural inference to remain local and fully provisioned lessons to retain an offline mode.
+**Context:** `AI_Teacher_Complete_Technology_Stack.md` defines a practical delivery stack built around Next.js, FastAPI, PostgreSQL/pgvector, Redis workers, provider-backed AI/media, WebSockets, FFmpeg, object storage, Docker, and cloud deployment. This conflicts with the earlier Vite/Flask and local-only inference decisions.
 
-**Decision:** Integrate Agora Web RTC 4.x behind application-owned adapters for opt-in live audio/video. Keep teaching state, captions, checkpoints, source data, orchestration, and neural inference on project infrastructure. Do not adopt Agora Conversational AI Engine in the approved local-only profile. Preserve composed timeline playback as the default/degraded path.
+**Decision:** Adopt the blueprint as the implementation baseline documented in `technical/technology_stack.md`. Use Next.js/React/TypeScript/Tailwind for the web application; FastAPI/Pydantic for REST and WebSocket APIs; PostgreSQL/pgvector, Redis workers, and S3-compatible storage for data; PyMuPDF, python-docx, python-pptx, and pluggable OCR for ingestion; and a provider-neutral AI Gateway for LLM, embeddings, reranking, image, STT, TTS, and avatar/video capabilities. Use deterministic SVG, LaTeX, Matplotlib, and Mermaid renderers where factual precision matters, and FFmpeg for short adaptive media segments. Docker and GitHub Actions form the initial delivery path.
 
-**Consequences:** Live RTC requires internet access, disclosure/consent, residency review, short-lived server-issued tokens, and cost controls. The adapter remains replaceable and an Agora outage cannot remove transcript/visual lesson access. This partially supersedes ADR-003 only for live media; SSE remains the authoritative server-event baseline.
+Keep the deterministic teaching harness, structured validation, evidence gates, controlled specialist contracts, and modular-monolith approach. Concrete providers are configuration selected through evaluation and disclosure, never domain dependencies. Defer Kubernetes and custom foundation-model, speech, or avatar training.
 
-**Status:** Accepted, 2026-09-01.
+**Consequences:** ADR-003 and ADR-015 through ADR-017 are superseded. The product now requires networked external AI/media services unless a compatible local adapter is configured. Cost, availability, rate limits, consent, retention, residency, and vendor governance become production gates. Provider abstraction and typed fallbacks preserve replaceability and testability.
+
+**Status:** Accepted, 2026-09-04.
 
 ## Decision process
 

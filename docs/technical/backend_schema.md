@@ -42,9 +42,9 @@ This is the `PLANNED` PostgreSQL 16 + pgvector schema. It becomes `ACTIVE` only 
 | E-025 | `learner_observations` | Verified facts derived from attempts/history |
 | E-026 | `learner_inferences` | Confidence-scored personalization proposals |
 | E-027 | `workflow_instances` | Durable master-orchestrator execution state |
-| E-028 | `model_manifests` | Approved GGUF identity, lineage, license, and compatibility |
-| E-029 | `runtime_profiles` | CUDA/Vulkan/CPU build and hardware policy |
-| E-030 | `model_evaluations` | Quality, safety, language, and backend benchmark results |
+| E-028 | `provider_configurations` | Approved provider/model capability, governance, and limits |
+| E-029 | `provider_evaluations` | Quality, safety, language, latency, and cost results |
+| E-030 | `provider_usage` | Metered token/media use and estimated cost |
 
 ## Core tables
 
@@ -84,7 +84,7 @@ The sum of segment durations must be validated against the lesson time budget by
 
 ### Media
 
-`media_assets`: `id`, `user_id`, `lesson_id`, `segment_id nullable`, `kind CHECK audio/avatar/visual/caption/thumbnail/export`, `status CHECK queued/generating/ready/failed`, `object_key`, `sha256`, `mime_type`, `byte_size`, `duration_ms`, `width`, `height`, `language`, `model_manifest_id nullable`, `runtime_profile_id nullable`, `tool_name/version`, `generation_version`, `metadata jsonb`, `error_code`, timestamps. Index `(lesson_id,segment_id,kind,status)`; deduplication uses a privacy-scoped generation cache key, never cross-owner source output.
+`media_assets`: `id`, `user_id`, `lesson_id`, `segment_id nullable`, `kind CHECK audio/avatar/visual/caption/thumbnail/export`, `status CHECK queued/generating/ready/failed`, `object_key`, `sha256`, `mime_type`, `byte_size`, `duration_ms`, `width`, `height`, `language`, `provider_configuration_id nullable`, `tool_name/version`, `generation_version`, `metadata jsonb`, `error_code`, timestamps. Index `(lesson_id,segment_id,kind,status)`; deduplication uses a privacy-scoped generation cache key, never cross-owner source output.
 
 ### Session, assessment, and progress
 
@@ -112,24 +112,22 @@ Responses are append-only. Mastery is derived and rebuildable. A low-confidence 
 | --- | --- |
 | `agent_definitions` | `id`, `agent_type`, `agent_version`, `implementation_kind CHECK deterministic/llama_cpp/hybrid`, `model_capability_profile nullable`, `input_schema`, `output_schema`, `capabilities jsonb`, `privacy_scope jsonb`, `timeout_class`, `status CHECK active/canary/disabled`, `configuration_digest`, timestamps; UNIQUE(`agent_type`,`agent_version`) |
 | `workflow_instances` | `id`, `user_id`, `workflow_type`, `resource_type/id`, `definition_version`, `state`, `status CHECK running/paused/succeeded/failed/cancelled`, `hop_count`, `max_hops`, `deadline_at`, `token_budget`, `cost_budget_micros`, `tokens_used`, `cost_used_micros`, `version`, timestamps |
-| `agent_runs` | `id`, `workflow_id`, `agent_definition_id`, `model_manifest_id nullable`, `runtime_profile_id nullable`, `parent_run_id nullable`, `task_id UNIQUE`, `idempotency_key UNIQUE`, `input_schema_version`, `output_schema_version`, `context_refs jsonb`, `context_digest`, `status CHECK queued/running/succeeded/rejected/failed/cancelled/timed_out`, `attempt`, `deadline_at`, `token_budget`, `tokens_used`, `compute_ms`, `peak_ram_bytes`, `peak_vram_bytes`, `confidence`, `evidence_refs jsonb`, `trace_id`, `started_at`, `completed_at`, `error_code`, `error_detail_redacted`; append-only terminal outcome |
+| `agent_runs` | `id`, `workflow_id`, `agent_definition_id`, `provider_configuration_id nullable`, `parent_run_id nullable`, `task_id UNIQUE`, `idempotency_key UNIQUE`, `input_schema_version`, `output_schema_version`, `context_refs jsonb`, `context_digest`, `status CHECK queued/running/succeeded/rejected/failed/cancelled/timed_out`, `attempt`, `deadline_at`, `token_budget`, `tokens_used`, `media_units jsonb`, `estimated_cost`, `confidence`, `evidence_refs jsonb`, `trace_id`, `started_at`, `completed_at`, `error_code`, `error_detail_redacted`; append-only terminal outcome |
 | `agent_artifacts` | `id`, `run_id`, `user_id`, `artifact_type`, `schema_version`, `payload jsonb`, `payload_object_key nullable`, `checksum`, `validation_status CHECK candidate/accepted/rejected/superseded`, `validation_results jsonb`, `accepted_by_service`, `accepted_at`, `supersedes_id nullable`, `created_at`; UNIQUE(`run_id`,`artifact_type`,`checksum`) |
 
 Indexes cover workflow `(user_id,status,updated_at)`, runs `(workflow_id,status,created_at)`, `(agent_definition_id,status,created_at)`, and artifacts `(user_id,artifact_type,validation_status,created_at)`. `context_refs` may identify authorized resources but must not contain credentials or unredacted private payloads. Large/private artifacts use encrypted object storage with a database checksum and access policy.
 
 The workflow state machine creates agent runs; agents cannot insert domain rows. An accepted artifact records the validating service and remains linked to the run/provenance. Rejected artifacts are retained for a short debugging/evaluation window with stricter access, then deleted or reduced to non-sensitive metrics.
 
-### Local model registry
+### Provider and model registry
 
 | Table | Key fields and constraints |
 | --- | --- |
-| `model_manifests` | `id`, `capability_profile`, `name`, `source_type CHECK huggingface/local_finetune`, `hf_repo nullable`, `hf_revision nullable`, `filename`, `sha256 UNIQUE`, `license_spdx`, `license_text_digest`, `base_model_ref`, `fine_tune_run_ref nullable`, `architecture`, `task`, `quantization`, `parameter_count`, `context_size`, `chat_template_digest`, `tokenizer_digest`, `gguf_metadata jsonb`, `byte_size`, `min_ram_bytes`, `min_vram_bytes`, `llama_cpp_min_build`, `status CHECK quarantined/evaluating/approved/active/rejected/retired`, `approved_at`, timestamps |
-| `runtime_profiles` | `id`, `name`, `backend CHECK cuda/vulkan/cpu`, `llama_cpp_commit`, `binary_sha256`, `build_flags jsonb`, `os`, `arch`, `device_match jsonb`, `driver_requirements jsonb`, `memory_policy jsonb`, `server_defaults jsonb`, `status CHECK testing/approved/disabled`, timestamps; UNIQUE(`name`,`llama_cpp_commit`,`binary_sha256`) |
-| `model_evaluations` | `id`, `model_manifest_id`, `runtime_profile_id`, `suite_name`, `suite_version`, `dataset_digest`, `metrics jsonb`, `quality_pass`, `safety_pass`, `compatibility_pass`, `latency jsonb`, `memory jsonb`, `evaluated_at`, `report_object_key`; UNIQUE(`model_manifest_id`,`runtime_profile_id`,`suite_name`,`suite_version`) |
+| `provider_configurations` | `id`, `capability`, `provider`, `model_name`, `model_version`, `adapter_version`, `purpose`, `region nullable`, `license_terms_ref`, `data_boundary jsonb`, `retention_policy jsonb`, `limits jsonb`, `fallback_configuration_id nullable`, `status CHECK evaluating/approved/active/disabled/retired`, `approved_at`, timestamps; UNIQUE(`provider`,`model_name`,`model_version`,`capability`) |
+| `provider_evaluations` | `id`, `provider_configuration_id`, `suite_name`, `suite_version`, `dataset_digest`, `metrics jsonb`, `quality_pass`, `safety_pass`, `grounding_pass`, `language_pass`, `latency jsonb`, `cost jsonb`, `evaluated_at`, `report_object_key`; UNIQUE(`provider_configuration_id`,`suite_name`,`suite_version`) |
+| `provider_usage` | `id`, `user_id nullable`, `session_id nullable`, `agent_run_id nullable`, `provider_configuration_id`, `request_units jsonb`, `estimated_cost`, `currency`, `latency_ms`, `outcome`, `fallback_used`, `occurred_at`; partition by time and index billing/operational dimensions |
 
-Activation requires an approved manifest and at least one passing evaluation for the selected runtime profile. Model files remain quarantined until checksum, license, GGUF metadata, architecture, pinned-build loading, smoke inference, and task evaluation pass. Database rows never store model weights.
-
-Local fine-tune lineage referenced by `fine_tune_run_ref` resolves to an immutable training manifest containing base/dataset/code revisions, licenses/consents, recipe, seed, hyperparameters, adapter/merged hashes, conversion command/version, quantization, evaluations, and model-card object key. The serving process cannot create or mutate training records.
+A provider/model configuration becomes active only after required governance review and capability-specific evaluation pass. Secrets are referenced from a secret manager or environment and never stored in these rows. Disabling a configuration prevents new calls while preserving historical traceability; fallback targets must be independently approved.
 
 ### Learner evidence and inferences
 
