@@ -25,35 +25,52 @@ class EvidencePack(BaseModel):
     grounding_notes: Optional[str] = None
 
 
+from app.rag.retriever import HybridRetriever
+from app.rag.models import GroundingLevel
+
+
 class EducationalRAGAdapter:
-    """Consumes Member 1 RAG retrieval endpoints or provides clean local evidence packs."""
+    """Consumes Module 2 RAG retrieval engine to provide grounded educational evidence packs."""
+
+    def __init__(self, retriever: Optional[HybridRetriever] = None):
+        self.retriever = retriever or HybridRetriever()
 
     def retrieve_concept_evidence(self, concept: str, document_id: Optional[str] = None) -> EvidencePack:
-        if "ohm" in concept.lower() or "resistance" in concept.lower():
-            return EvidencePack(
-                query=f"Explain {concept} and formulas",
-                concept=concept,
-                chunks=[
-                    EvidenceChunk(
-                        chunk_id="chk_001",
-                        section="Chapter 4: Electric Current & Circuits",
-                        page=53,
-                        content="Ohm's Law: At constant temperature, the current through a conductor between two points is directly proportional to the voltage across the two points and inversely proportional to the resistance. Formula: V = I * R, or I = V / R.",
-                        relevance_score=0.98,
-                    )
-                ],
-                is_grounded=True,
+        evidence_pkg = self.retriever.retrieve_evidence(
+            query=f"Explain {concept} and formulas and definitions",
+            target_concept=concept,
+            document_id=document_id,
+            top_k=3,
+        )
+
+        chunks = []
+        for it in evidence_pkg.evidence_items:
+            chunks.append(
+                EvidenceChunk(
+                    chunk_id=it.chunk_id,
+                    document_id=it.document_id,
+                    section=f"{it.chapter} - {it.section}" if it.chapter else it.section,
+                    page=it.page,
+                    content=it.excerpt,
+                    relevance_score=it.relevance_score,
+                )
             )
-        return EvidencePack(
-            query=concept,
-            concept=concept,
-            chunks=[
+
+        is_grounded = evidence_pkg.grounding_level in [GroundingLevel.SUPPORTED, GroundingLevel.PARTIALLY_SUPPORTED]
+
+        if not chunks:
+            chunks.append(
                 EvidenceChunk(
                     chunk_id="chk_gen",
                     content=f"Fundamental educational principles and definitions for {concept}.",
                     relevance_score=0.85,
                 )
-            ],
-            is_grounded=False,
-            grounding_notes="General knowledge grounding fallback.",
+            )
+
+        return EvidencePack(
+            query=f"Explain {concept} and formulas",
+            concept=concept,
+            chunks=chunks,
+            is_grounded=is_grounded,
+            grounding_notes=evidence_pkg.limitations_or_gaps,
         )

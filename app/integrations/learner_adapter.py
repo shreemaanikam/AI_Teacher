@@ -18,27 +18,42 @@ class LearnerProfileData(BaseModel):
     known_misconceptions: List[str] = Field(default_factory=list)
 
 
-class LearnerCognitiveModelAdapter:
-    """Interacts with Member 2's persistent learner profile and mastery tracking services."""
+from app.learner.cognitive_service import LearnerCognitiveService, get_learner_service
 
-    def __init__(self):
-        self._profiles: Dict[str, LearnerProfileData] = {}
+
+class LearnerCognitiveModelAdapter:
+    """Interacts with Module 3's persistent learner profile and mastery tracking services."""
+
+    def __init__(self, service: Optional[LearnerCognitiveService] = None):
+        self.service = service or get_learner_service()
 
     def get_learner_profile(self, student_id: str) -> LearnerProfileData:
-        if student_id not in self._profiles:
-            self._profiles[student_id] = LearnerProfileData(
-                student_id=student_id,
-                display_name=f"Student_{student_id}",
-                education_level="beginner",
-                preferred_language="en",
-            )
-        return self._profiles[student_id]
+        state = self.service.get_or_create_learner(student_id)
+        return LearnerProfileData(
+            student_id=state.learner_id,
+            display_name=state.display_name,
+            education_level=state.educational_level,
+            preferred_language=state.language,
+            goals=[state.learning_objective],
+            mastery_scores=state.concept_mastery,
+            known_misconceptions=[m.misconception_type for m in state.misconceptions],
+        )
 
     def update_concept_mastery(self, student_id: str, concept: str, mastery: float) -> None:
-        profile = self.get_learner_profile(student_id)
-        profile.mastery_scores[concept] = mastery
+        state = self.service.get_or_create_learner(student_id)
+        state.concept_mastery[concept] = mastery
+        state.current_concept = concept
+        state.current_mastery = mastery
 
     def record_misconception(self, student_id: str, misconception_type: str) -> None:
-        profile = self.get_learner_profile(student_id)
-        if misconception_type not in profile.known_misconceptions:
-            profile.known_misconceptions.append(misconception_type)
+        state = self.service.get_or_create_learner(student_id)
+        from app.learner.models import MisconceptionMemory
+        if not any(m.misconception_type == misconception_type for m in state.misconceptions):
+            state.misconceptions.append(
+                MisconceptionMemory(
+                    misconception_type=misconception_type,
+                    concept=state.current_concept or "general",
+                    severity="high",
+                    resolved=False,
+                )
+            )
