@@ -1,27 +1,16 @@
 # 🎓 Apurva AI — Your Personal AI College Teacher
 
-<<<<<<< HEAD
-The repository contains the first implementation slice of the planned local-first AI teacher.
-=======
 **Autonomous Multi-Course College AI Educator • Upload-Driven • Multimodal Adaptive Platform**
->>>>>>> 9fae963 (feat: finalize AI Teacher prototype)
 
 [![Test Suite](https://img.shields.io/badge/pytest-422%20passed%20(100%25)-brightgreen.svg)](tests)
 [![Release Gates](https://img.shields.io/badge/release%20certification-18%2F18%20gates%20PASS-brightgreen.svg)](docs/FINAL_RELEASE_VERIFICATION.md)
-[![Frontend](https://img.shields.io/badge/frontend-React%2019%20%7C%20TailwindCSS%20%7C%20Vite-blue.svg)](file:///Users/shreemaanikam/Apurva%20AI%20Teacher/frontend)
-[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](file:///Users/shreemaanikam/Apurva%20AI%20Teacher/requirements.txt)
-[![Security](https://img.shields.io/badge/security-0%20client%20secrets%20%7C%20AST%20sandbox-green.svg)](file:///Users/shreemaanikam/Apurva%20AI%20Teacher/app/security)
+[![Frontend](https://img.shields.io/badge/frontend-React%2019%20%7C%20TailwindCSS%20%7C%20Vite-blue.svg)](frontend)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](requirements.txt)
+[![Security](https://img.shields.io/badge/security-0%20client%20secrets%20%7C%20AST%20sandbox-green.svg)](app/security)
 
-<<<<<<< HEAD
-Requirements: Python 3.12+ and Node 22+.
-
-```powershell
-Copy-Item .env.example .env
-=======
 Apurva AI Teacher is an autonomous, upload-driven, multi-course college AI educator engineered to teach authentic university engineering subjects. Rather than serving as a generic chatbot or single-topic demonstrator, Apurva ingests real university course materials (lecture notes, syllabi, problem sets), builds concept dependency graphs, computes principled study schedules for upcoming exams, generates adaptive homework with rubric evaluations, solves multi-turn student doubts with contextual memory, supports live video interruption and resumption, and executes pedagogical teaching controls with a realistic human avatar teacher.
 
 ---
->>>>>>> 9fae963 (feat: finalize AI Teacher prototype)
 
 ## 🌟 Key Capabilities & Architectural Highlights
 
@@ -194,12 +183,13 @@ python3 scripts/verify_phase13_final_release.py
 
 ## 📚 Essential Documentation Suite
 
-- 📖 [**Production Deployment Runbook (17 Topics)**](file:///Users/shreemaanikam/Apurva%20AI%20Teacher/docs/DEPLOYMENT.md): Comprehensive guide to prerequisites, environment configs, database migrations, Gunicorn WSGI, Docker, and failure recovery.
-- 🎤 [**Hackathon Live Demo Script**](file:///Users/shreemaanikam/Apurva%20AI%20Teacher/docs/HACKATHON_DEMO_SCRIPT.md): Minute-by-minute 3-to-7 minute presentation flow with exact cues and spoken narrative.
-- 🎯 [**Demo Talking Points & Rationale**](file:///Users/shreemaanikam/Apurva%20AI%20Teacher/docs/DEMO_TALKING_POINTS.md): High-impact answers to "Why this exists", "Why RAG + Knowledge Graph", "Why deterministic harness", and "Why personalization".
-- 🛡️ [**Live Demo Failure Recovery Plan**](file:///Users/shreemaanikam/Apurva%20AI%20Teacher/docs/LIVE_DEMO_FAILURE_PLAN.md): Emergency protocols for Wi-Fi drops, API rate limits, and quota exhaustion to guarantee 100% uptime on stage.
-- 📊 [**Machine Learning Course Certification**](file:///Users/shreemaanikam/Apurva%20AI%20Teacher/docs/ML_COURSE_CERTIFICATION.md): Audit of the 5-unit syllabus, formulas, and benchmark metrics.
-- 🎓 [**Personalized Student Platform Guide**](file:///Users/shreemaanikam/Apurva%20AI%20Teacher/docs/STUDENT_PLATFORM.md): Architecture of multi-course, multi-student, exam planning, and doubt vaults.
+- 📖 [**Final Release Verification & Certification (18/18 PASS)**](docs/FINAL_RELEASE_VERIFICATION.md): Complete audit matrix, automated test metrics (422/422 passing), browser E2E results, and bug remediation report.
+- 📖 [**Production Deployment Runbook (17 Topics)**](docs/DEPLOYMENT.md): Comprehensive guide to prerequisites, environment configs, database migrations, Gunicorn WSGI, Docker, and failure recovery.
+- 🎤 [**Hackathon Live Demo Script**](docs/HACKATHON_DEMO_SCRIPT.md): Minute-by-minute 3-to-7 minute presentation flow with exact cues and spoken narrative.
+- 🎯 [**Demo Talking Points & Rationale**](docs/DEMO_TALKING_POINTS.md): High-impact answers to "Why this exists", "Why RAG + Knowledge Graph", "Why deterministic harness", and "Why personalization".
+- 🛡️ [**Live Demo Failure Recovery Plan**](docs/LIVE_DEMO_FAILURE_PLAN.md): Emergency protocols for Wi-Fi drops, API rate limits, and quota exhaustion to guarantee 100% uptime on stage.
+- 📊 [**Machine Learning Course Certification**](docs/ML_COURSE_CERTIFICATION.md): Audit of the 5-unit syllabus, formulas, and benchmark metrics.
+- 🎓 [**Personalized Student Platform Guide**](docs/STUDENT_PLATFORM.md): Architecture of multi-course, multi-student, exam planning, and doubt vaults.
 
 ---
 
@@ -208,4 +198,3 @@ python3 scripts/verify_phase13_final_release.py
 1. **Third-Party API Quotas**: In live cloud environments without funded API keys, cloud avatar video (D-ID) and neural voice (ElevenLabs) seamlessly degrade to the local procedural canvas avatar and 24kHz local synthesis without error or interruption.
 2. **Database Network Partitions**: If the managed cloud PostgreSQL endpoint experiences connection timeouts or DNS resolution issues, the system automatically routes transactions to the local SQLite engine with full data consistency.
 3. **AST Sandbox Boundaries**: The Python code execution sandbox intentionally restricts arbitrary standard library access (`os`, `sys`, `socket`, `open`) to prevent remote code execution vulnerabilities; mathematical operations via `math` and standard numeric routines are permitted.
->>>>>>> 9fae963 (feat: finalize AI Teacher prototype)
