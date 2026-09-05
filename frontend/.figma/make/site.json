@@ -1,0 +1,10 @@
+{
+  "description": "This adaptive AI teaching platform personalizes lessons for learners, identifies misconceptions, and adjusts teaching strategies to enhance understanding and mastery.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

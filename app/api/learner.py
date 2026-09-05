@@ -6,16 +6,89 @@ from __future__ import annotations
 from flask import Blueprint, request, jsonify
 from app.learner.cognitive_service import get_learner_service
 from app.harness.session import TeachingStrategy
+from app.db.repository import get_teaching_repository
+from app.auth.token_manager import extract_token_from_request, get_session_token_manager
 
 learner_blueprint = Blueprint("learner_api", __name__)
 
 
+import uuid
+
+
+@learner_blueprint.route("/learners", methods=["GET"])
+def list_students():
+    """Lists all registered student profiles."""
+    repo = get_teaching_repository()
+    students = repo.list_learner_profiles()
+    return jsonify({"success": True, "count": len(students), "students": students}), 200
+
+
+@learner_blueprint.route("/learners", methods=["POST"])
+@learner_blueprint.route("/learners/profile", methods=["POST"])
+@learner_blueprint.route("/learners/register", methods=["POST"])
+def save_student_profile():
+    """Creates or updates a persistent student profile with college, exam goals, and style."""
+    data = request.get_json(silent=True) or {}
+    student_id = data.get("student_id") or data.get("id") or data.get("learner_id")
+    if not student_id:
+        student_id = f"std_{uuid.uuid4().hex[:8]}"
+        data["student_id"] = student_id
+        data["id"] = student_id
+
+    repo = get_teaching_repository()
+    saved = repo.save_learner_profile(data)
+    return jsonify({"success": True, "profile": saved, "student_id": student_id}), 200
+
+
+@learner_blueprint.route("/learners/<learner_id>/profile", methods=["GET"])
+def get_student_profile(learner_id: str):
+    """Retrieves persistent student profile from database."""
+    repo = get_teaching_repository()
+    profile = repo.get_learner_profile(learner_id)
+    if not profile:
+        return jsonify({"error": f"Student profile '{learner_id}' not found."}), 404
+    return jsonify({"success": True, "profile": profile})
+
+
+@learner_blueprint.route("/learners/<learner_id>", methods=["DELETE"])
+def delete_student(learner_id: str):
+    """Deletes a student profile and associated data with strict ownership verification."""
+    token = extract_token_from_request()
+    caller_id = request.args.get("student_id") or request.headers.get("X-Student-Id")
+    if token:
+        mgr = get_session_token_manager()
+        is_val, payload, err = mgr.verify_token(token)
+        if not is_val:
+            return jsonify({"success": False, "error": f"Unauthorized: {err}", "status": 401}), 401
+        caller_id = payload.get("sub") or payload.get("student_id")
+
+    if caller_id and learner_id and caller_id != learner_id:
+        return jsonify({
+            "success": False,
+            "error": "Forbidden: You do not have permission to delete another student's profile.",
+            "status": 403,
+        }), 403
+
+    repo = get_teaching_repository()
+    deleted = repo.delete_learner_profile(learner_id)
+    if not deleted:
+        return jsonify({"error": f"Student '{learner_id}' not found."}), 404
+    return jsonify({"success": True, "deleted_learner_id": learner_id}), 200
+
+
+
 @learner_blueprint.route("/learners/<learner_id>", methods=["GET"])
 def get_learner_profile(learner_id: str):
-    """Retrieves full cognitive profile for a student."""
+    """Retrieves cognitive profile along with persistent personalization profile for a student."""
     svc = get_learner_service()
     learner = svc.get_or_create_learner(learner_id)
-    return jsonify({"success": True, "learner": learner.model_dump()})
+    repo = get_teaching_repository()
+    profile = repo.get_learner_profile(learner_id)
+    res = learner.model_dump()
+    if profile:
+        res["persistent_profile"] = profile
+    return jsonify({"success": True, "learner": res})
+
 
 
 @learner_blueprint.route("/learners/<learner_id>/concepts", methods=["GET"])

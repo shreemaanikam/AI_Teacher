@@ -1,5 +1,6 @@
 """
 Model Provider Implementations for Module 6: AI Model Intelligence.
+Provides resilient cascading inference across Gemini, OpenAI, and Local Deterministic runtime.
 """
 
 from __future__ import annotations
@@ -94,7 +95,7 @@ class OpenAIProvider(ModelProvider):
                 "temperature": 0.3,
             }
             req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
-            with urllib.request.urlopen(req, timeout=12) as resp:
+            with urllib.request.urlopen(req, timeout=10) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 return data["choices"][0]["message"]["content"]
         except Exception as e:
@@ -123,25 +124,39 @@ class GeminiProvider(ModelProvider):
         if not self.api_key:
             return self.fallback.generate(prompt, system_prompt, model)
 
-        try:
-            mod = model or "gemini-2.0-flash"
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={self.api_key}"
-            headers = {"Content-Type": "application/json"}
-            payload = {"contents": [{"parts": [{"text": f"{system_prompt or ''}\n\n{prompt}"}]}]}
-            req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
-            with urllib.request.urlopen(req, timeout=12) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                return data["candidates"][0]["content"]["parts"][0]["text"]
-        except Exception as e:
-            logger.warning(f"Gemini call failed ({e}). Falling back to LocalFallbackProvider.")
-            return self.fallback.generate(prompt, system_prompt, model)
+        # Candidate models in order of priority (tested lightning-fast models first)
+        candidate_models = []
+        if model:
+            candidate_models.append(model)
+        for fallback_mod in ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash", "gemini-flash-latest"]:
+            if fallback_mod not in candidate_models:
+                candidate_models.append(fallback_mod)
+
+        for mod in candidate_models:
+            if not mod:
+                continue
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={self.api_key}"
+                headers = {"Content-Type": "application/json"}
+                full_text = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
+                payload = {"contents": [{"parts": [{"text": full_text}]}]}
+                req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    return data["candidates"][0]["content"]["parts"][0]["text"]
+            except Exception as e:
+                logger.warning(f"Gemini call for model {mod} failed ({e}). Trying next model.")
+
+        logger.warning("All Gemini candidate models failed. Falling back to LocalFallbackProvider.")
+        return self.fallback.generate(prompt, system_prompt, model)
 
     def reason(self, prompt: str, system_prompt: Optional[str] = None, model: Optional[str] = None) -> str:
-        return self.generate(prompt, system_prompt, "gemini-1.5-pro")
+        return self.generate(prompt, system_prompt, model or "gemini-3.6-flash")
 
     def evaluate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
-        return self.generate(prompt, system_prompt, "gemini-2.0-flash")
+        return self.generate(prompt, system_prompt, "gemini-3.6-flash")
 
     def translate(self, text: str, target_language: str) -> str:
         prompt = f"Translate the following educational text into {target_language}:\n\n{text}"
-        return self.generate(prompt, system_prompt="You are a professional multilingual STEM translator.", model="gemini-2.0-flash")
+        return self.generate(prompt, system_prompt="You are a professional multilingual STEM translator.", model="gemini-3.6-flash")
+

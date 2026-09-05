@@ -16,7 +16,7 @@ def get_voice_provider(prefer_neural: bool = True) -> VoiceProvider:
     If prefer_neural is True and an API key is available in environment, returns NeuralTTSProvider.
     Otherwise returns LocalVoiceProvider.
     """
-    has_key = bool(os.getenv("OPENAI_API_KEY") or os.getenv("TTS_API_KEY"))
+    has_key = bool(os.getenv("ELEVENLABS_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("TTS_API_KEY"))
     if prefer_neural and has_key:
         return NeuralTTSProvider()
     return LocalVoiceProvider()

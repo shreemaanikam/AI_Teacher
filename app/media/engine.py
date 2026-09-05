@@ -18,6 +18,7 @@ from app.media.models import (
 from app.media.script_generator import TeachingScriptGenerator
 from app.media.tts.provider import VoiceProvider
 from app.media.tts.factory import get_voice_provider
+from app.media.avatar.provider import AvatarProvider
 from app.media.avatar.factory import get_avatar_provider
 from app.media.composer import VideoComposer
 from app.media.jobs import MediaJobQueue
@@ -48,6 +49,8 @@ class MultimodalMediaEngine:
         self.composer = composer or VideoComposer()
         self.job_queue = job_queue or MediaJobQueue()
         self._segments_store: Dict[str, MediaSegment] = {}
+        from app.media.doubt_handler import StudentDoubtHandler
+        self.doubt_handler = StudentDoubtHandler(media_engine=self)
 
     def generate_teaching_segment(
         self,
@@ -59,6 +62,8 @@ class MultimodalMediaEngine:
         misconception: Optional[MisconceptionRecord] = None,
         visual_asset: Optional[VisualAsset] = None,
         session_id: Optional[str] = None,
+        presenter_style: str = "prof_apurva",
+        aspect_ratio: str = "16:9",
         async_mode: bool = False,
     ) -> MediaSegment | MediaJob:
         """
@@ -89,10 +94,16 @@ class MultimodalMediaEngine:
             # 3. Avatar Generation with fallback
             avatar: Optional[AvatarAsset] = None
             try:
-                avatar = self.avatar_provider.generate_avatar(
-                    script=script,
-                    audio=audio,
-                )
+                import inspect
+                sig = inspect.signature(self.avatar_provider.generate_avatar)
+                kwargs = {"script": script, "audio": audio}
+                if "presenter_style" in sig.parameters:
+                    kwargs["presenter_style"] = presenter_style
+                if "aspect_ratio" in sig.parameters:
+                    kwargs["aspect_ratio"] = aspect_ratio
+                if "misconception" in sig.parameters:
+                    kwargs["misconception"] = misconception
+                avatar = self.avatar_provider.generate_avatar(**kwargs)
             except Exception as e:
                 logger.warning(f"Avatar generation failed: {e}. Falling back to visual+audio mode.")
 

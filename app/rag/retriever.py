@@ -36,8 +36,11 @@ class HybridRetriever:
         vector_store: Optional[VectorStore] = None,
         embedding_provider: Optional[EmbeddingProvider] = None,
     ):
-        self.embedding_provider = embedding_provider or get_embedding_provider()
-        self.vector_store = vector_store or MemoryVectorStore(self.embedding_provider)
+        self.vector_store = vector_store or MemoryVectorStore()
+        if hasattr(self.vector_store, "embedding_provider") and self.vector_store.embedding_provider:
+            self.embedding_provider = self.vector_store.embedding_provider
+        else:
+            self.embedding_provider = embedding_provider or get_embedding_provider()
         self._preload_test_corpus()
 
     def _preload_test_corpus(self) -> None:
@@ -207,3 +210,20 @@ class HybridRetriever:
             confidence=confidence,
             limitations_or_gaps="No direct match found in document index" if grounding == GroundingLevel.UNSUPPORTED else None,
         )
+
+
+_GLOBAL_RETRIEVER: Optional[HybridRetriever] = None
+
+
+def get_hybrid_retriever() -> HybridRetriever:
+    """Returns singleton HybridRetriever backed by configured vector store and embedding engine."""
+    global _GLOBAL_RETRIEVER
+    if _GLOBAL_RETRIEVER is None:
+        from app.rag.vector_store import get_vector_store
+        from app.rag.embeddings import get_embedding_provider
+        _GLOBAL_RETRIEVER = HybridRetriever(
+            vector_store=get_vector_store(),
+            embedding_provider=get_embedding_provider(),
+        )
+    return _GLOBAL_RETRIEVER
+

@@ -59,17 +59,26 @@ class VideoComposer:
             os.makedirs(out_dir, exist_ok=True)
             mp4_path = os.path.join(out_dir, f"{segment_id}.mp4")
 
-            # Extract audio bytes from data URI
+            # Extract audio bytes from data URI (supports WAV, MP3, MPEG)
+            import base64
             if audio.content_uri.startswith("data:audio/wav;base64,"):
-                import base64
                 b64_data = audio.content_uri.split(",", 1)[1]
-                wav_bytes = base64.b64decode(b64_data)
+                audio_bytes = base64.b64decode(b64_data)
+                suffix = ".wav"
+            elif audio.content_uri.startswith("data:audio/mpeg;base64,") or audio.content_uri.startswith("data:audio/mp3;base64,"):
+                b64_data = audio.content_uri.split(",", 1)[1]
+                audio_bytes = base64.b64decode(b64_data)
+                suffix = ".mp3"
+            elif audio.content_uri.startswith("data:audio/ogg;base64,"):
+                b64_data = audio.content_uri.split(",", 1)[1]
+                audio_bytes = base64.b64decode(b64_data)
+                suffix = ".ogg"
             else:
                 return None
 
-            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as wav_file:
-                wav_file.write(wav_bytes)
-                wav_path = wav_file.name
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as audio_file:
+                audio_file.write(audio_bytes)
+                audio_path = audio_file.name
 
             try:
                 # Use FFmpeg testsrc / lavfi color canvas combined with audio to produce real valid MP4
@@ -78,7 +87,7 @@ class VideoComposer:
                     "-y",
                     "-f", "lavfi",
                     "-i", f"color=c=0x0f172a:s=1280x720:d={duration}",
-                    "-i", wav_path,
+                    "-i", audio_path,
                     "-c:v", "libx264",
                     "-tune", "stillimage",
                     "-pix_fmt", "yuv420p",
@@ -95,8 +104,8 @@ class VideoComposer:
                     logger.warning(f"FFmpeg compilation returned non-zero code: {result.stderr.decode('utf-8', errors='ignore')[:200]}")
                     return None
             finally:
-                if os.path.exists(wav_path):
-                    os.remove(wav_path)
+                if os.path.exists(audio_path):
+                    os.remove(audio_path)
 
         except Exception as e:
             logger.warning(f"Failed to generate MP4 with FFmpeg: {e}. Falling back to interactive manifest.")

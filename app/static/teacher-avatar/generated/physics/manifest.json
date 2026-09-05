@@ -1,0 +1,66 @@
+{
+  "subject": "physics",
+  "count": 6,
+  "segments": [
+    {
+      "id": "seg_01_intro",
+      "title": "Welcome & Electric Potential",
+      "teacher_state": "INTRODUCING",
+      "teacher_action": "introducing",
+      "duration": 6.2,
+      "video_path": "public/teacher-avatar/generated/physics/seg_01_intro.mp4",
+      "audio_path": "public/teacher-avatar/generated/physics/seg_01_intro.wav",
+      "script": "Good morning class. Today we will explore Ohm's Law, which forms the cornerstone of circuit theory."
+    },
+    {
+      "id": "seg_02_voltage",
+      "title": "Understanding Voltage (Potential Difference)",
+      "teacher_state": "EXPLAINING",
+      "teacher_action": "explain_example",
+      "duration": 7.87,
+      "video_path": "public/teacher-avatar/generated/physics/seg_02_voltage.mp4",
+      "audio_path": "public/teacher-avatar/generated/physics/seg_02_voltage.wav",
+      "script": "Voltage, or electric potential difference, is the electrical pressure from a power source that pushes electrons through a conducting loop."
+    },
+    {
+      "id": "seg_03_current",
+      "title": "Understanding Current (Flow of Charge)",
+      "teacher_state": "EXPLAINING",
+      "teacher_action": "explain_example",
+      "duration": 8.41,
+      "video_path": "public/teacher-avatar/generated/physics/seg_03_current.mp4",
+      "audio_path": "public/teacher-avatar/generated/physics/seg_03_current.wav",
+      "script": "Current is the rate at which electric charge flows past a point in a circuit, measured in amperes, where one ampere equals one coulomb per second."
+    },
+    {
+      "id": "seg_04_resistance",
+      "title": "Understanding Electrical Resistance",
+      "teacher_state": "EXPLAINING",
+      "teacher_action": "point_to_formula",
+      "duration": 7.62,
+      "video_path": "public/teacher-avatar/generated/physics/seg_04_resistance.mp4",
+      "audio_path": "public/teacher-avatar/generated/physics/seg_04_resistance.wav",
+      "script": "Resistance is the opposition to the flow of electrical charge. When electrons drift through a conductor, they collide with lattice ions."
+    },
+    {
+      "id": "seg_05_formula",
+      "title": "The Master Equation: I = V / R",
+      "teacher_state": "POINTING",
+      "teacher_action": "point_to_formula",
+      "duration": 9.86,
+      "video_path": "public/teacher-avatar/generated/physics/seg_05_formula.mp4",
+      "audio_path": "public/teacher-avatar/generated/physics/seg_05_formula.wav",
+      "script": "Using Ohm's Law, the current I in amperes equals voltage V divided by resistance R. Notice the direct proportionality to voltage and inverse relationship with resistance."
+    },
+    {
+      "id": "seg_06_example",
+      "title": "Worked Numerical Circuit Example",
+      "teacher_state": "EXPLAINING",
+      "teacher_action": "explain_example",
+      "duration": 7.69,
+      "video_path": "public/teacher-avatar/generated/physics/seg_06_example.mp4",
+      "audio_path": "public/teacher-avatar/generated/physics/seg_06_example.wav",
+      "script": "For example, if our battery supplies nine volts across a three ohm resistor, the resulting current is exactly three amperes."
+    }
+  ]
+}

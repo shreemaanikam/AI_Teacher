@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: ai-teacher
+    runtime: python
+    buildCommand: "pip install --no-cache-dir -r requirements.txt && cd frontend && npm install && npm run build && cd .. && cp frontend/dist/assets/* app/static/assets/ && cp frontend/dist/index.html app/templates/demo.html"
+    startCommand: "gunicorn -w 2 -b 0.0.0.0:$PORT --timeout 120 --access-logfile - --error-logfile - wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: APP_ENV
+        value: production
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: LLM_MODEL
+        value: gemini-3.5-flash-lite
+      - key: EMBEDDING_PROVIDER
+        value: gemini
+      - key: EMBEDDING_MODEL
+        value: gemini-embedding-2
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+    healthCheckPath: /api/v1/health
+    plan: standard

@@ -1,0 +1,66 @@
+{
+  "subject": "machine-learning",
+  "count": 6,
+  "segments": [
+    {
+      "id": "seg_01_intro",
+      "title": "Welcome & Optimization Foundations",
+      "teacher_state": "INTRODUCING",
+      "teacher_action": "introducing",
+      "duration": 8.18,
+      "video_path": "public/teacher-avatar/generated/machine-learning/seg_01_intro.mp4",
+      "audio_path": "public/teacher-avatar/generated/machine-learning/seg_01_intro.wav",
+      "script": "Welcome back. Today we examine Gradient Descent, the foundational first-order optimization algorithm that powers modern machine learning."
+    },
+    {
+      "id": "seg_02_loss_surface",
+      "title": "The Objective & Loss Surface J(w)",
+      "teacher_state": "EXPLAINING",
+      "teacher_action": "explain_example",
+      "duration": 9.42,
+      "video_path": "public/teacher-avatar/generated/machine-learning/seg_02_loss_surface.mp4",
+      "audio_path": "public/teacher-avatar/generated/machine-learning/seg_02_loss_surface.wav",
+      "script": "Our objective is to minimize a loss function J of theta, which measures the difference between model predictions and true ground truth targets across parameter space."
+    },
+    {
+      "id": "seg_03_learning_rate",
+      "title": "Learning Rate (Step Size Alpha)",
+      "teacher_state": "EXPLAINING",
+      "teacher_action": "explain_example",
+      "duration": 9.74,
+      "video_path": "public/teacher-avatar/generated/machine-learning/seg_03_learning_rate.mp4",
+      "audio_path": "public/teacher-avatar/generated/machine-learning/seg_03_learning_rate.wav",
+      "script": "The learning rate alpha controls our step size. If alpha is too small, convergence takes forever; if too large, the updates will oscillate or diverge."
+    },
+    {
+      "id": "seg_04_gradient_direction",
+      "title": "Gradient Vector & Steepest Descent",
+      "teacher_state": "POINTING",
+      "teacher_action": "point_to_formula",
+      "duration": 9.44,
+      "video_path": "public/teacher-avatar/generated/machine-learning/seg_04_gradient_direction.mp4",
+      "audio_path": "public/teacher-avatar/generated/machine-learning/seg_04_gradient_direction.wav",
+      "script": "The gradient vector points in the direction of steepest ascent on the loss surface. Therefore, to minimize error, we take steps in the negative gradient direction."
+    },
+    {
+      "id": "seg_05_update_rule",
+      "title": "Parameter Update Rule: w_t+1 = w_t - alpha * grad",
+      "teacher_state": "POINTING",
+      "teacher_action": "point_to_formula",
+      "duration": 8.34,
+      "video_path": "public/teacher-avatar/generated/machine-learning/seg_05_update_rule.mp4",
+      "audio_path": "public/teacher-avatar/generated/machine-learning/seg_05_update_rule.wav",
+      "script": "Here is the master parameter update equation: theta at t plus one equals theta at t minus alpha times the gradient of the loss function."
+    },
+    {
+      "id": "seg_06_example",
+      "title": "Model Training & Convergence Example",
+      "teacher_state": "EXPLAINING",
+      "teacher_action": "explain_example",
+      "duration": 8.13,
+      "video_path": "public/teacher-avatar/generated/machine-learning/seg_06_example.mp4",
+      "audio_path": "public/teacher-avatar/generated/machine-learning/seg_06_example.wav",
+      "script": "In training deep neural networks and linear models, repeated mini-batch gradient descent iteratively drives weights toward the global or local minimum."
+    }
+  ]
+}

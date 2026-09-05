@@ -95,3 +95,56 @@ class MasteryUpdateResult(BaseModel):
     delta: float
     reason: str
     confidence: float
+
+
+class StudentProfile(BaseModel):
+    """
+    Real student identity model for college students.
+    Supports degree, department, study goals, exam schedules, and personalized learning style.
+    """
+    student_id: str = Field(default_factory=lambda: f"std_{uuid.uuid4().hex[:8]}")
+    name: str = "College Student"
+    college: str = "College of Engineering"
+    department: str = "Computer Science and Engineering"
+    degree: str = "B.Tech"
+    year: int = 2
+    semester: int = 4
+    preferred_language: str = "en"
+    learning_style: str = "VISUAL_AND_ANALOGIES"  # FORMAL_RIGOROUS, VISUAL_AND_ANALOGIES, PRACTICAL_APPLICATION, SIMPLE
+    target_score: str = "90%"
+    available_study_hours: float = 15.0
+    exam_dates: Dict[str, str] = Field(default_factory=dict)
+    enrolled_courses: List[str] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CourseUnit(BaseModel):
+    unit_id: str = Field(default_factory=lambda: f"unit_{uuid.uuid4().hex[:6]}")
+    title: str
+    order: int = 1
+    concepts: List[str] = Field(default_factory=list)
+    completed: bool = False
+
+
+class CourseDetail(BaseModel):
+    """
+    Collegiate course/subject structure belonging to a student.
+    Supports units, concepts, materials, assignments, and exam deadlines.
+    """
+    course_id: str = Field(default_factory=lambda: f"crs_{uuid.uuid4().hex[:8]}")
+    student_id: str
+    code: str
+    name: str
+    department: Optional[str] = None
+    semester: int = 1
+    description: Optional[str] = None
+    exam_date: Optional[str] = None
+    target_score: str = "90%"
+    status: str = "ACTIVE"
+    units: List[CourseUnit] = Field(default_factory=list)
+    concepts: List[str] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+

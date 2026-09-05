@@ -75,6 +75,10 @@ class TeachingTraceLogger:
     def get_traces_for_session(self, session_id: str) -> List[TeachingTraceEntry]:
         return self._traces.get(session_id, [])
 
+    def get_session_traces(self, session_id: str) -> List[TeachingTraceEntry]:
+        """Alias for get_traces_for_session."""
+        return self.get_traces_for_session(session_id)
+
     def get_latest_trace(self, session_id: str) -> Optional[TeachingTraceEntry]:
         traces = self._traces.get(session_id, [])
         return traces[-1] if traces else None

@@ -159,3 +159,127 @@ def get_segment_status(segment_id: str):
         "job_id": job.job_id,
         "error": job.error,
     }), 200
+
+
+@media_blueprint.route("/media/transcribe", methods=["POST"])
+def transcribe_audio_answer():
+    """Transcribes student spoken audio using Whisper STT."""
+    import base64
+    from app.media.stt.factory import get_stt_provider
+    
+    stt = get_stt_provider()
+    lang = request.args.get("language", "en")
+    
+    # 1. Check for multipart file upload
+    if "file" in request.files:
+        audio_file = request.files["file"]
+        audio_bytes = audio_file.read()
+        filename = audio_file.filename or "student_answer.wav"
+    else:
+        # 2. Check JSON base64 body
+        data = request.get_json(silent=True) or {}
+        b64_audio = data.get("audio_base64", "")
+        if b64_audio.startswith("data:"):
+            b64_audio = b64_audio.split(",", 1)[-1]
+        audio_bytes = base64.b64decode(b64_audio) if b64_audio else b""
+        filename = data.get("filename", "student_answer.wav")
+        lang = data.get("language", lang)
+
+    if not audio_bytes:
+        return jsonify({"success": False, "error": "No audio content provided."}), 400
+
+    transcript, provider_used = stt.transcribe(audio_bytes, filename=filename, language=lang)
+    return jsonify({
+        "success": True,
+        "transcript": transcript,
+        "provider_used": provider_used,
+    })
+
+
+@media_blueprint.route("/media/teachers", methods=["GET"])
+def list_teachers():
+    """Lists available realistic human teacher personas and configurations."""
+    from app.media.avatar.human_avatar import RealisticHumanAvatarProvider
+    provider = RealisticHumanAvatarProvider()
+    teachers = [t.model_dump(mode="json") for t in provider.AVAILABLE_TEACHERS.values()]
+    return jsonify({
+        "status": "success",
+        "teachers": teachers,
+        "active_teacher": current_app.config.get("ACTIVE_TEACHER_ID", "prof_apurva"),
+    }), 200
+
+
+@media_blueprint.route("/media/teacher/select", methods=["POST"])
+def select_teacher():
+    """Selects the active teacher persona for the current session."""
+    data = request.get_json(silent=True) or {}
+    teacher_id = data.get("teacher_id", "prof_apurva")
+    from app.media.avatar.human_avatar import RealisticHumanAvatarProvider
+    provider = RealisticHumanAvatarProvider()
+    profile = provider.get_teacher_profile(teacher_id)
+    current_app.config["ACTIVE_TEACHER_ID"] = profile.teacher_id
+    return jsonify({
+        "status": "success",
+        "teacher": profile.model_dump(mode="json"),
+    }), 200
+
+
+@media_blueprint.route("/media/doubt", methods=["POST"])
+def handle_student_doubt():
+    """
+    Handles live student doubts and interruptions:
+    Preserves lesson state, sets avatar to thinking/reassuring, generates clarification,
+    and enables resumption.
+    """
+    media_engine = get_media_engine()
+    data = request.get_json(silent=True) or {}
+    session_id = data.get("session_id", "session_default")
+    student_query = data.get("query") or data.get("doubt_text") or "I don't understand this."
+    concept = data.get("concept", "general_study")
+    language = data.get("language", "en")
+    teacher_id = data.get("teacher_id") or current_app.config.get("ACTIVE_TEACHER_ID", "prof_apurva")
+    context = data.get("context")
+
+    response = media_engine.doubt_handler.handle_doubt(
+        session_id=session_id,
+        student_query=student_query,
+        concept=concept,
+        current_context=context,
+        language=language,
+        teacher_id=teacher_id,
+    )
+
+    return jsonify({
+        "status": "success",
+        "doubt_response": response.model_dump(mode="json"),
+    }), 200
+
+
+@media_blueprint.route("/media/playback/pause", methods=["POST"])
+def pause_playback():
+    """Synchronously pauses avatar animation, audio, and visual progression."""
+    data = request.get_json(silent=True) or {}
+    session_id = data.get("session_id")
+    current_time = float(data.get("timestamp_seconds", 0.0))
+    return jsonify({
+        "status": "paused",
+        "session_id": session_id,
+        "paused_at": current_time,
+        "is_paused": True,
+    }), 200
+
+
+@media_blueprint.route("/media/playback/resume", methods=["POST"])
+def resume_playback():
+    """Resumes synchronized avatar, audio, and visual progression."""
+    data = request.get_json(silent=True) or {}
+    session_id = data.get("session_id")
+    current_time = float(data.get("timestamp_seconds", 0.0))
+    return jsonify({
+        "status": "resumed",
+        "session_id": session_id,
+        "resumed_at": current_time,
+        "is_paused": False,
+    }), 200
+
+

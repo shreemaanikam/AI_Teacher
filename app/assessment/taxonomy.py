@@ -52,7 +52,7 @@ class MisconceptionTaxonomy:
                 concept="ohms_law",
                 misconception_type="inverse_relationship_confusion",
                 belief_description="Student believes increasing resistance increases electrical current.",
-                indicator_keywords=["increases", "increase", "more current", "doubles", "higher current", "directly proportional"],
+                indicator_keywords=["current increases", "increases current", "more current", "current doubles", "higher current", "directly proportional"],
                 anti_patterns=["current increases when resistance increases", "more resistance allows more current", "current doubles"],
                 severity="severe",
                 prerequisite_gap="electrical_resistance_definition",

@@ -1,0 +1,36 @@
+services:
+  ai-teacher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apurva-ai-teacher
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - APP_ENV=production
+      - PORT=5001
+      - HOST=0.0.0.0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
+      - UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_INDEX_NAME=${PINECONE_INDEX_NAME:-ai-teacher}
+      - PINECONE_HOST=${PINECONE_HOST}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - DID_API_KEY=${DID_API_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+    volumes:
+      - ai-teacher-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:5001/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  ai-teacher-data:
+    driver: local

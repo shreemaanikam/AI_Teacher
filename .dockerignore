@@ -1,0 +1,17 @@
+.git
+.gitignore
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+.env
+data/ai_teacher.db
+data/backups/*
+tests/
+scratch/
+docs/
+*.md
+frontend/node_modules
+frontend/.figma

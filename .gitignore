@@ -1,13 +1,49 @@
+# Environment & Secrets
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
 .venv/
+venv/
+ENV/
+env/
 __pycache__/
+*.py[cod]
+*$py.class
 .pytest_cache/
+*.db
+*.sqlite
+*.sqlite3
+
+# Node & Frontend
 node_modules/
 dist/
+frontend/dist/
 coverage/
 *.tsbuildinfo
+.DS_Store
+*/.DS_Store
 
-# Source assessment files are kept locally, not in Git.
+# Temporary & Debugging Files
+bin/
+*.mov
+scratch/
+frontend_backup/
+assets/reference/*.mov
+assets/reference/*_frames/
+assets/reference/ref_analysis/
+assets/teacher/source_frames/
+assets/teacher/test/
+data/backups/
+data/media/
+data/uploads/
+data/courses/
+data/ai_teacher.db
+
+# Source assessment files kept locally
 *.txt
 *.pdf
 /technical_assessment_document.md

@@ -12,7 +12,8 @@ from typing import Tuple, Optional, Set
 from pydantic import BaseModel
 
 ALLOWED_EXTENSIONS: Set[str] = {
-    ".pdf", ".doc", ".docx", ".ppt", ".pptx", ".txt", ".md", ".markdown"
+    ".pdf", ".doc", ".docx", ".ppt", ".pptx", ".txt", ".md", ".markdown",
+    ".png", ".jpg", ".jpeg"
 }
 
 ALLOWED_MIME_TYPES: Set[str] = {
@@ -23,6 +24,8 @@ ALLOWED_MIME_TYPES: Set[str] = {
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "text/plain",
     "text/markdown",
+    "image/png",
+    "image/jpeg",
     "application/octet-stream",  # Often sent by browsers for binary formats
 }
 

@@ -1,0 +1,19 @@
+{
+  "teacher_id": "male_professor_01",
+  "name": "Prof. Richard Davies",
+  "gender": "male",
+  "role": "college professor",
+  "department": "Department of Applied Physics & Engineering",
+  "style": "photorealistic",
+  "source_type": "fictional_licensed_ai_generated",
+  "license": "Custom Proprietary Fictional Educator License (Ethics Safe, Non-Cloned)",
+  "resolution": [
+    720,
+    720
+  ],
+  "fps": 24,
+  "voice_id": "Daniel",
+  "recommended_tts": "Kokoro-ONNX / Native Studio Say",
+  "created_at": "2026-09-05T08:00:00Z",
+  "notes": "Photorealistic male professor designed for collegiate STEM teaching and live doubt solving."
+}

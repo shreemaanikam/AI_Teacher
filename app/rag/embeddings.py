@@ -1,5 +1,6 @@
 """
 Multilingual Embedding Providers for Module 2: Document Processing & Educational RAG.
+Provides 256-D local dense embeddings and 1024-D cloud neural embeddings for Pinecone.
 """
 
 from __future__ import annotations
@@ -9,6 +10,8 @@ import hashlib
 import json
 import logging
 import re
+import urllib.request
+import urllib.error
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
@@ -35,10 +38,10 @@ class LocalDenseEmbeddingProvider(EmbeddingProvider):
     Guarantees cross-language semantic proximity for core scientific terms across English, Hindi, Tamil, and Hinglish.
     """
 
-    DIMENSIONS = 256
+    DIMENSIONS: int = 256
 
-    def __init__(self):
-        # Cross-language synonym anchors
+    def __init__(self, dimensions: int = 256):
+        self.DIMENSIONS = dimensions
         self.multilingual_anchors = {
             "current": ["current", "धारा", "மின்னோட்டம்", "dhara", "amperes", "i", "electrons"],
             "voltage": ["voltage", "विभव", "மின்னழுத்தம்", "potential", "volts", "v"],
@@ -92,25 +95,62 @@ class LocalDenseEmbeddingProvider(EmbeddingProvider):
         return vec
 
 
-class OpenAIEmbeddingProvider(EmbeddingProvider):
-    """Production neural embedding provider using OpenAI text-embedding-3-small."""
+class GeminiEmbeddingProvider(EmbeddingProvider):
+    """
+    Production embedding provider using Google Gemini models/gemini-embedding-2.
+    Produces native 1024-dimensional vectors matching Pinecone index configuration.
+    """
+
+    DIMENSIONS: int = 1024
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        self.fallback = LocalDenseEmbeddingProvider()
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self.fallback = LocalDenseEmbeddingProvider(dimensions=1024)
 
     def embed_text(self, text: str) -> List[float]:
         if not self.api_key:
             return self.fallback.embed_text(text)
 
         try:
-            import urllib.request
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent?key={self.api_key}"
+            payload = {
+                "content": {"parts": [{"text": text[:2000]}]},
+                "outputDimensionality": self.DIMENSIONS,
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return data.get("embedding", {}).get("values", self.fallback.embed_text(text))
+        except Exception as e:
+            logger.warning(f"Gemini embedding call failed ({e}). Falling back to LocalDenseEmbeddingProvider.")
+            return self.fallback.embed_text(text)
+
+
+class OpenAIEmbeddingProvider(EmbeddingProvider):
+    """Production neural embedding provider using OpenAI text-embedding-3-small."""
+
+    DIMENSIONS: int = 1024
+
+    def __init__(self, api_key: Optional[str] = None):
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.fallback = LocalDenseEmbeddingProvider(dimensions=1024)
+
+    def embed_text(self, text: str) -> List[float]:
+        if not self.api_key:
+            return self.fallback.embed_text(text)
+
+        try:
             url = "https://api.openai.com/v1/embeddings"
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
             }
-            payload = {"model": "text-embedding-3-small", "input": text}
+            payload = {"model": "text-embedding-3-small", "input": text[:2000], "dimensions": self.DIMENSIONS}
             req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
             with urllib.request.urlopen(req, timeout=10) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
@@ -120,8 +160,17 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
             return self.fallback.embed_text(text)
 
 
-def get_embedding_provider(prefer_neural: bool = True) -> EmbeddingProvider:
-    """Returns OpenAIEmbeddingProvider if key is present, otherwise LocalDenseEmbeddingProvider."""
-    if prefer_neural and os.getenv("OPENAI_API_KEY"):
-        return OpenAIEmbeddingProvider()
-    return LocalDenseEmbeddingProvider()
+def get_embedding_provider(prefer_neural: bool = False) -> EmbeddingProvider:
+    """Returns configured embedding provider."""
+    prov = (os.getenv("EMBEDDING_PROVIDER") or "gemini").lower()
+    if prefer_neural:
+        if prov == "gemini" and os.getenv("GEMINI_API_KEY"):
+            return GeminiEmbeddingProvider()
+        elif prov == "openai" and os.getenv("OPENAI_API_KEY"):
+            return OpenAIEmbeddingProvider()
+        elif os.getenv("GEMINI_API_KEY"):
+            return GeminiEmbeddingProvider()
+        elif os.getenv("OPENAI_API_KEY"):
+            return OpenAIEmbeddingProvider()
+            
+    return LocalDenseEmbeddingProvider(dimensions=256)

@@ -37,8 +37,12 @@ class MisconceptionDetector:
         # 1. Check direct question misconception targets
         for target in question.misconception_targets:
             for pattern in target.trigger_patterns:
-                pat_words = pattern.lower().split()
-                if pattern.lower() in ans_clean or (pat_words and all(w in ans_clean for w in pat_words)):
+                pat_lower = pattern.lower().strip()
+                if not pat_lower:
+                    continue
+                pat_words = pat_lower.split()
+                pat_regex = r"\b" + r"\s+(?:\w+\s+){0,2}".join(map(re.escape, pat_words)) + r"\b"
+                if pat_lower in ans_clean or re.search(pat_regex, ans_clean):
                     return MisconceptionRecord(
                         concept=question.concept,
                         misconception_type=target.misconception_type,

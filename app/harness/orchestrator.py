@@ -80,12 +80,70 @@ class MasterTeachingOrchestrator:
         time_minutes: int = 10,
     ) -> TeachingSessionState:
         """Initializes a new teaching session and transitions through START -> UNDERSTAND -> PLAN -> TEACH."""
-        concepts = concepts_list or [topic]
+        concepts = list(concepts_list or [topic])
         initial_mastery = {c: 0.3 for c in concepts}
         initial_snapshots = {
             c: ConceptMasterySnapshot(concept=c, mastery=0.3, confidence=0.5)
             for c in concepts
         }
+
+        # Check for persistent student profile and personalize harness parameters
+        profile = None
+        try:
+            profile = self.repository.get_learner_profile(student_id)
+        except Exception as e:
+            logger.warning(f"Could not load student profile for {student_id}: {e}")
+
+        initial_strategy = TeachingStrategy.DIRECT_EXPLANATION
+        initial_difficulty = DifficultyLevel.BASIC
+        active_misconceptions: List[ActiveMisconception] = []
+
+        if profile:
+            # 1. Personalize strategy based on preferred style
+            p_style = str(profile.get("preferred_teaching_style") or profile.get("teaching_style") or "").upper()
+            if "FORMAL" in p_style or "RIGOROUS" in p_style:
+                initial_strategy = TeachingStrategy.STEP_BY_STEP
+            elif "ANALOGY" in p_style:
+                initial_strategy = TeachingStrategy.SIMPLE_ANALOGY
+            elif "EXAM" in p_style:
+                initial_strategy = TeachingStrategy.PROBLEM_SOLVING
+            elif "PRACTICAL" in p_style or "CODE" in p_style:
+                initial_strategy = TeachingStrategy.EXAMPLE_FIRST
+
+            # 2. Personalize difficulty based on target score and exam goals
+            target_score_raw = profile.get("target_score")
+            if target_score_raw:
+                import re
+                try:
+                    num_match = re.search(r"(\d+(\.\d+)?)", str(target_score_raw))
+                    if num_match:
+                        score_val = float(num_match.group(1))
+                        if score_val >= 80:
+                            initial_difficulty = DifficultyLevel.INTERMEDIATE
+                        if score_val >= 95:
+                            initial_difficulty = DifficultyLevel.APPLICATION
+                    elif "A" in str(target_score_raw).upper():
+                        initial_difficulty = DifficultyLevel.INTERMEDIATE
+                except Exception:
+                    pass
+
+
+            # 3. Personalize concept prioritization and weak concepts
+            weak_concepts = profile.get("weak_concepts", [])
+            for w in weak_concepts:
+                for idx, c in enumerate(concepts):
+                    if w.lower() in c.lower() or c.lower() in w.lower():
+                        # Prioritize weak concept to front of curriculum
+                        prioritized = concepts.pop(idx)
+                        concepts.insert(0, prioritized)
+                        initial_mastery[prioritized] = 0.15
+                        initial_snapshots[prioritized] = ConceptMasterySnapshot(concept=prioritized, mastery=0.15, confidence=0.7)
+                        active_misconceptions.append(ActiveMisconception(
+                            concept=prioritized,
+                            misconception_type=f"Known weakness in {w}",
+                            severity="high"
+                        ))
+                        break
 
         session = TeachingSessionState(
             student_id=student_id,
@@ -100,10 +158,12 @@ class MasterTeachingOrchestrator:
             concepts_list=concepts,
             concept_mastery=initial_mastery,
             concept_snapshots=initial_snapshots,
-            current_strategy=TeachingStrategy.DIRECT_EXPLANATION,
-            current_difficulty=DifficultyLevel.BASIC,
+            active_misconceptions=active_misconceptions,
+            current_strategy=initial_strategy,
+            current_difficulty=initial_difficulty,
             time_remaining_minutes=time_minutes,
             total_time_minutes=time_minutes,
+            metadata={"student_profile": profile} if profile else {},
         )
 
         # 1. Transition START -> UNDERSTAND

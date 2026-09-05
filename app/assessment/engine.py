@@ -92,14 +92,14 @@ class AssessmentEngine:
                 expected_answer="The current is halved because current is inversely proportional to resistance.",
                 rubric=AnswerRubric(
                     criteria=["States current decreases or is halved", "Mentions inverse relationship or I = V/R formula"],
-                    key_terms=["decrease", "halved", "half", "inversely proportional", "reduces"],
-                    anti_patterns=["current increases", "current doubles", "stays same"],
+                    key_terms=["decrease", "decreases", "halved", "half", "inversely", "reduces"],
+                    anti_patterns=["current increases", "current doubles", "stays same", "more current"],
                     formula="I = V / R",
                 ),
                 misconception_targets=[
                     MisconceptionTarget(
                         misconception_type="inverse_relationship_confusion",
-                        trigger_patterns=["current increases", "doubles", "increases", "more current", "doubled"],
+                        trigger_patterns=["current increases", "current will increase", "current doubles", "current will double", "more current", "higher current", "pushes electrons", "pushes more"],
                         explanation="Student believes increasing resistance increases electrical current.",
                         remediation_strategy=TeachingStrategy.SIMPLE_ANALOGY,
                     )
@@ -130,12 +130,12 @@ class AssessmentEngine:
         self,
         lesson_id: str,
         concept: str,
-        misconception: MisconceptionRecord,
+        misconception: Optional[MisconceptionRecord] = None,
         difficulty: DifficultyLevel = DifficultyLevel.BASIC,
         language: str = "en",
     ) -> Question:
         """Generates a targeted follow-up question specifically testing resolution of the misconception."""
-        if "inverse" in misconception.misconception_type.lower():
+        if misconception and misconception.misconception_type and "inverse" in misconception.misconception_type.lower():
             q = Question(
                 lesson_id=lesson_id,
                 concept=concept,
@@ -228,13 +228,13 @@ class AssessmentEngine:
             rubric=AnswerRubric(
                 criteria=["Identifies current decreases", "Mentions inverse relationship or I = V/R"],
                 key_terms=["decreases", "decrease", "inversely", "drops", "reduces", "smaller", "half"],
-                anti_patterns=["current increases", "increases", "doubles", "more current"],
+                anti_patterns=["current increases", "current doubles", "more current", "higher current"],
                 formula="I = V / R",
             ),
             misconception_targets=[
                 MisconceptionTarget(
                     misconception_type="inverse_relationship_confusion",
-                    trigger_patterns=["current increases", "increases", "doubles", "more current", "higher current", "doubled"],
+                    trigger_patterns=["current increases", "current will increase", "current doubles", "current will double", "more current", "higher current", "pushes electrons", "pushes more"],
                     explanation="Student believes increasing resistance increases electrical current.",
                     remediation_strategy=TeachingStrategy.SIMPLE_ANALOGY,
                 )

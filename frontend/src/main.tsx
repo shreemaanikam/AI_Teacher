@@ -1,9 +1,13 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { RealtimeClassroom } from "./features/lesson/RealtimeClassroom";
-import "./styles.css";
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import ErrorBoundary from './components/ErrorBoundary'
+import './index.css'
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode><RealtimeClassroom channel="lesson_demo" uid={Math.floor(Math.random() * 1_000_000) + 1} /></StrictMode>,
-);
-
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  </React.StrictMode>,
+)

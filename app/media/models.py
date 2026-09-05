@@ -55,8 +55,75 @@ class AudioAsset(BaseModel):
     format: str = "wav"  # wav, mp3
     content_uri: str  # local path, data URI or URL
     byte_size: int = 0
+    sample_rate: int = 24000
     is_fallback: bool = False
+    provider_used: str = "local_procedural_tts"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class TeacherEmotion(str, Enum):
+    WELCOME = "WELCOME"
+    EXPLAINING = "EXPLAINING"
+    THINKING = "THINKING"
+    QUESTIONING = "QUESTIONING"
+    LISTENING = "LISTENING"
+    ENCOURAGING = "ENCOURAGING"
+    CORRECTING = "CORRECTING"
+    CONGRATULATING = "CONGRATULATING"
+    REASSURING = "REASSURING"
+    CELEBRATING = "CELEBRATING"
+    GOODBYE = "GOODBYE"
+
+
+class TeacherGesture(str, Enum):
+    INTRODUCTION = "INTRODUCTION"
+    EXPLANATION = "EXPLANATION"
+    POINT_TO_BOARD = "POINT_TO_BOARD"
+    EMPHASIZE = "EMPHASIZE"
+    QUESTION = "QUESTION"
+    THINKING = "THINKING"
+    CORRECTION = "CORRECTION"
+    CONGRATULATE = "CONGRATULATE"
+    REST = "REST"
+
+
+class TeacherProfile(BaseModel):
+    """Persistent teacher persona identity and educator configuration."""
+    teacher_id: str = "prof_apurva"
+    display_name: str = "Prof. Apurva Sharma, Ph.D."
+    title: str = "Professor of Computer Science & Physics"
+    avatar_provider: str = "human_avatar"
+    avatar_id: str = "prof_apurva"
+    voice_provider: str = "elevenlabs"
+    voice_id: str = "JBFqnCBsd6RMkjVDRZzb"
+    supported_languages: List[str] = Field(default_factory=lambda: ["en", "hi", "ta"])
+    personality: str = "Professional"  # Professional, Friendly, Exam Coach, Mentor, Focused
+    speaking_rate: float = 1.0
+    appearance_metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class TeacherPresentationState(BaseModel):
+    """Real-time affective, gestural, and focus state of the teacher avatar."""
+    emotion: TeacherEmotion = TeacherEmotion.EXPLAINING
+    gesture: TeacherGesture = TeacherGesture.EXPLANATION
+    speech_mode: str = "EXPLAINING"
+    attention_target: str = "visual_board"  # visual_board, student, notes
+    intensity: float = 0.5
+
+
+class PresentationCue(BaseModel):
+    """Tri-synchronized cue aligning narration speech, chalkboard action, and avatar gesture."""
+    cue_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    start_time: float = 0.0
+    end_time: float = 0.0
+    action: str = "SPEAK"  # SPEAK, LOOK_AT_BOARD, POINT, HIGHLIGHT, THINK, PAUSE, SMILE, ENCOURAGE, QUESTION, LISTEN, CORRECT, CONGRATULATE
+    target: Optional[str] = None
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+    concept_id: Optional[str] = None
+    gesture: Optional[TeacherGesture] = None
+    emotion: Optional[TeacherEmotion] = None
+    caption_text: Optional[str] = None
+    visual_trigger: Optional[str] = None
 
 
 class AvatarAsset(BaseModel):
@@ -64,12 +131,20 @@ class AvatarAsset(BaseModel):
     avatar_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     script_id: str
     audio_id: Optional[str] = None
-    presenter_style: str = "academic_mentor"
+    presenter_style: str = "prof_apurva"
     format: str = "svg_animation"  # mp4, webm, svg_animation
     content_uri: str
     duration_seconds: float
+    file_size_bytes: int = 0
+    mouth_keyframes: List[Dict[str, Any]] = Field(default_factory=list)
+    teacher_profile: Optional[TeacherProfile] = None
+    presentation_state: Optional[TeacherPresentationState] = None
+    aspect_ratio: str = "16:9"  # 16:9, 9:16, 4:3, 1:1
+    cues: List[PresentationCue] = Field(default_factory=list)
     is_fallback: bool = False
+    provider_used: str = "human_avatar"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 
 
 class TimedCaptionCue(BaseModel):

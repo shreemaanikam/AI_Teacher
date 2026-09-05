@@ -124,5 +124,8 @@ class ProceduralAvatarProvider(AvatarProvider):
             format="svg_animation",
             content_uri=svg_animation,
             duration_seconds=duration,
+            file_size_bytes=len(svg_animation.encode("utf-8")),
             is_fallback=False,
+            provider_used="procedural_svg",
         )
+

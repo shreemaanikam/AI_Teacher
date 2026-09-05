@@ -52,44 +52,37 @@ class ModelRouter:
         cost = 0.0
         lat = 50
 
-        if request.routing_mode == RoutingMode.QUALITY and has_openai:
-            chosen_provider = ModelProviderType.OPENAI
-            chosen_model = "gpt-4o"
-            reason = f"High-reasoning quality mode selected for {request.task_type.value}."
-            cost = 0.005
-            lat = 1200
-        elif request.routing_mode == RoutingMode.QUALITY and has_gemini:
+        if has_gemini:
             chosen_provider = ModelProviderType.GEMINI
-            chosen_model = "gemini-1.5-pro"
-            reason = f"Deep reasoning quality mode selected for {request.task_type.value}."
-            cost = 0.003
-            lat = 1100
-        elif request.routing_mode in [RoutingMode.FAST, RoutingMode.BALANCED]:
-            if has_gemini:
-                chosen_provider = ModelProviderType.GEMINI
-                chosen_model = "gemini-2.0-flash"
-                reason = "Fast, cost-effective multimodal model selected."
-                cost = 0.0002
-                lat = 400
-            elif has_openai:
-                chosen_provider = ModelProviderType.OPENAI
+            chosen_model = "gemini-3.5-flash-lite"
+            reason = "Fast, high-quality multimodal Gemini reasoning engine selected."
+            cost = 0.0002
+            lat = 300
+        elif has_openai:
+            chosen_provider = ModelProviderType.OPENAI
+            if request.routing_mode == RoutingMode.QUALITY:
+                chosen_model = "gpt-4o"
+                reason = f"High-reasoning quality mode selected for {request.task_type.value}."
+                cost = 0.005
+                lat = 1200
+            else:
                 chosen_model = "gpt-4o-mini"
                 reason = "Fast balanced reasoning model selected."
                 cost = 0.0003
                 lat = 450
-            else:
-                chosen_provider = ModelProviderType.LOCAL_FALLBACK
-                chosen_model = "local_deterministic_v1"
-                reason = "Offline local fallback engine active (zero external API dependency)."
-                cost = 0.0
-                lat = 20
+        else:
+            chosen_provider = ModelProviderType.LOCAL_FALLBACK
+            chosen_model = "local_deterministic_v1"
+            reason = "Offline local fallback engine active (zero external API dependency)."
+            cost = 0.0
+            lat = 20
 
         # Construct fallback chain
         fallbacks = [ModelProviderType.LOCAL_FALLBACK]
-        if chosen_provider == ModelProviderType.OPENAI and has_gemini:
-            fallbacks.insert(0, ModelProviderType.GEMINI)
-        elif chosen_provider == ModelProviderType.GEMINI and has_openai:
+        if chosen_provider == ModelProviderType.GEMINI and has_openai:
             fallbacks.insert(0, ModelProviderType.OPENAI)
+        elif chosen_provider == ModelProviderType.OPENAI and has_gemini:
+            fallbacks.insert(0, ModelProviderType.GEMINI)
 
         return ModelDecision(
             task_type=request.task_type,
