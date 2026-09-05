@@ -2,7 +2,7 @@ services:
   - type: web
     name: ai-teacher
     runtime: python
-    buildCommand: "pip install --no-cache-dir -r requirements.txt && cd frontend && npm install && npm run build && cd .. && cp frontend/dist/assets/* app/static/assets/ && cp frontend/dist/index.html app/templates/demo.html"
+    buildCommand: "pip install --no-cache-dir -r requirements.txt && cd frontend && npm install && npm run build && cd .. && cp -r frontend/dist/assets/* app/static/assets/ && cp frontend/dist/index.html app/templates/demo.html"
     startCommand: "gunicorn -w 2 -b 0.0.0.0:$PORT --timeout 120 --access-logfile - --error-logfile - wsgi:application"
     envVars:
       - key: PYTHON_VERSION
