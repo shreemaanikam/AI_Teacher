@@ -45,5 +45,6 @@ data/ai_teacher.db
 
 # Source assessment files kept locally
 *.txt
+!requirements.txt
 *.pdf
 /technical_assessment_document.md
