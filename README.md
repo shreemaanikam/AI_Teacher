@@ -1,4 +1,4 @@
-# 🎓 Apurva AI — Your Personal AI College Teacher
+# 🎓 Aster AI — Your Personal AI College Teacher
 
 **Autonomous Multi-Course College AI Educator • Upload-Driven • Multimodal Adaptive Platform**
 
