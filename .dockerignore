@@ -14,4 +14,7 @@ scratch/
 docs/
 *.md
 frontend/node_modules
-frontend/.figma
+.venv
+venv
+*.log
+

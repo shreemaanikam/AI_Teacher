@@ -52,6 +52,21 @@ def serve_root_teacher(filename: str):
     abort(404)
 
 
+@demo_ui_bp.route("/teacher-avatar/<path:filename>", methods=["GET"])
+def serve_root_teacher_avatar(filename: str):
+    """Serves teacher-avatar media assets directly."""
+    static_avatar = os.path.abspath(os.path.join(os.path.dirname(__file__), "../static/teacher-avatar"))
+    if os.path.exists(os.path.join(static_avatar, filename)):
+        return send_from_directory(static_avatar, filename)
+    pub_avatar = os.path.abspath("public/teacher-avatar")
+    if os.path.exists(os.path.join(pub_avatar, filename)):
+        return send_from_directory(pub_avatar, filename)
+    dist_avatar = os.path.join(FRONTEND_DIST_DIR, "teacher-avatar")
+    if os.path.exists(os.path.join(dist_avatar, filename)):
+        return send_from_directory(dist_avatar, filename)
+    abort(404)
+
+
 @demo_ui_bp.route("/robots.txt", methods=["GET"])
 def serve_robots_txt():
     """Serves robots.txt from the compiled frontend distribution."""
@@ -83,6 +98,14 @@ SPA_ROUTES = [
     "/analytics",
     "/profile",
     "/documents",
+    "/assessment",
+    "/report",
+    "/question",
+    "/evaluation-wrong",
+    "/evaluation-correct",
+    "/misconception",
+    "/adaptive",
+    "/adaptive-question",
 ]
 
 for _spa_route in SPA_ROUTES:

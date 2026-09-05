@@ -17,6 +17,8 @@ services:
         value: gemini
       - key: EMBEDDING_MODEL
         value: gemini-embedding-2
+      - key: SECRET_KEY
+        generateValue: true
       - key: GEMINI_API_KEY
         sync: false
       - key: DATABASE_URL
@@ -25,5 +27,5 @@ services:
         sync: false
       - key: ELEVENLABS_API_KEY
         sync: false
-    healthCheckPath: /api/v1/health
+    healthCheckPath: /api/v1/diagnostics
     plan: standard
