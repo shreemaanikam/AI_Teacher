@@ -10,7 +10,10 @@ import wave
 import struct
 import math
 from typing import List
-import cv2
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 import numpy as np
 from .base import BaseLipSyncProvider
 
@@ -20,7 +23,7 @@ class VisemeLipSyncProvider(BaseLipSyncProvider):
         self.mouth_anchor = mouth_anchor
 
     def is_available(self) -> bool:
-        return True
+        return cv2 is not None
 
     def _extract_audio_envelopes(self, wav_path: str, fps: int, frame_count: int) -> List[float]:
         """Extracts RMS energy per video frame from 16-bit PCM WAV."""
@@ -69,8 +72,8 @@ class VisemeLipSyncProvider(BaseLipSyncProvider):
         fps: int = 24,
         teacher_state = None
     ) -> List[np.ndarray]:
-        if not video_frames:
-            return []
+        if not video_frames or cv2 is None:
+            return video_frames
             
         envelopes = self._extract_audio_envelopes(audio_wav_path, fps, len(video_frames))
         synced_frames = []

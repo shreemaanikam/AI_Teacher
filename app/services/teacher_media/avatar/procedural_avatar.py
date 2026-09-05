@@ -11,7 +11,10 @@ to render natural lecture dynamics:
 import os
 import math
 from typing import List
-import cv2
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 import numpy as np
 from .base import BaseAvatarProvider
 from ..profile import TeacherState, DEFAULT_MALE_TEACHER
@@ -24,6 +27,8 @@ class ProceduralMaleAvatarProvider(BaseAvatarProvider):
         self._load_base()
 
     def _load_base(self):
+        if cv2 is None:
+            return
         if os.path.exists(self.reference_image_path):
             self._base_img = cv2.imread(self.reference_image_path)
         elif os.path.exists("data/media/teacher/male_professor_01.jpg"):
@@ -34,9 +39,12 @@ class ProceduralMaleAvatarProvider(BaseAvatarProvider):
             cv2.rectangle(self._base_img, (0, 0), (720, 720), (35, 45, 30), -1)
 
     def is_available(self) -> bool:
-        return True
+        return cv2 is not None
 
     def _get_base_image_for_state(self, teacher_state: TeacherState):
+        if cv2 is None:
+            fallback = np.zeros((720, 720, 3), dtype=np.uint8)
+            return fallback, [(484, 270), (554, 262)], (52, 68, 92)
         if teacher_state in (TeacherState.INTRODUCING, TeacherState.ASKING) and os.path.exists("assets/teacher/teacher_open_hands.jpg"):
             img = cv2.imread("assets/teacher/teacher_open_hands.jpg")
             return img, [(488, 270), (558, 262)], (55, 70, 95)
@@ -59,6 +67,8 @@ class ProceduralMaleAvatarProvider(BaseAvatarProvider):
         fps: int = 24,
         teacher_state: TeacherState = TeacherState.EXPLAINING
     ) -> List[np.ndarray]:
+        if cv2 is None:
+            return []
         base_img, eyes, eyelid_color = self._get_base_image_for_state(teacher_state)
         h, w = base_img.shape[:2]
         center = (w // 2, h // 2)

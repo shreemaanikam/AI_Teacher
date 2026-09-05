@@ -104,6 +104,14 @@ def detect_capabilities() -> MediaCapabilities:
     # Check System TTS (macOS say)
     system_tts_ok = shutil.which("say") is not None
 
+    # Check OpenCV
+    cv2_ok = False
+    try:
+        import cv2  # noqa: F401
+        cv2_ok = True
+    except ImportError:
+        cv2_ok = False
+
     # Determine optimal primary stack
     if kokoro_ok:
         active_tts = "kokoro_onnx"
@@ -116,13 +124,17 @@ def detect_capabilities() -> MediaCapabilities:
 
     if musetalk_ok and cuda_ok:
         active_lipsync = "musetalk"
-    else:
+    elif cv2_ok:
         active_lipsync = "audio_synchronized_viseme"
+    else:
+        active_lipsync = "pregenerated_sync"
 
     if liveportrait_ok:
         active_avatar = "liveportrait"
-    else:
+    elif cv2_ok:
         active_avatar = "procedural_photorealistic_opencv"
+    else:
+        active_avatar = "pregenerated_canonical_video"
 
     return MediaCapabilities(
         os=system_os,
@@ -139,7 +151,7 @@ def detect_capabilities() -> MediaCapabilities:
         liveportrait_available=liveportrait_ok,
         bark_available=bark_ok,
         system_tts_available=system_tts_ok,
-        opencv_video_writer_available=True,
+        opencv_video_writer_available=cv2_ok,
         primary_tts=active_tts,
         primary_lipsync=active_lipsync,
         primary_avatar=active_avatar,
